@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIGURING — Identity Through Figurines</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#E8272A;--blue:#1B3FD8;--yellow:#F5D000;--white:#F4F0E8;--black:#0A0A0A}
+body{background:#1a1410;font-family:'Space Mono',monospace;overflow:hidden;height:100vh;width:100vw;cursor:crosshair}
+#app{display:flex;height:100vh;width:100vw}
+
+/* SIDEBAR */
+#sidebar{width:320px;min-width:320px;background:#1a1410;color:var(--white);display:flex;flex-direction:column;overflow:hidden;z-index:10;border-right:2px solid var(--red)}
+#sidebar-header{padding:18px 18px 12px;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.title-main{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:.08em;color:var(--yellow);line-height:1}
+.title-sub{font-family:'DM Serif Display',serif;font-style:italic;font-size:9px;color:#444;margin-top:2px;line-height:1.5}
+#stage-nav{display:flex;border-bottom:1px solid #1a1a1a;flex-shrink:0}
+.stage-tab{flex:1;padding:8px 2px;text-align:center;font-size:7px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:#333;border-right:1px solid #1a1a1a;transition:all .2s;user-select:none}
+.stage-tab:last-child{border-right:none}
+.stage-tab.active{color:#0A0A0A;font-weight:700}
+.stage-tab[data-stage="core"].active{background:var(--yellow)}
+.stage-tab[data-stage="ideal"].active{background:#7FFFD4}
+.stage-tab[data-stage="perceived"].active{background:var(--red);color:#fff}
+.stage-tab[data-stage="data"].active{background:var(--blue);color:#fff}
+.stage-tab .tab-num{display:block;font-family:'Bebas Neue',sans-serif;font-size:15px;line-height:1;margin-bottom:1px}
+#controls-area{flex:1;padding:14px 16px 0;overflow-y:auto;min-height:0}
+#controls-area::-webkit-scrollbar{width:2px}
+#controls-area::-webkit-scrollbar-thumb{background:#222}
+.stage-panel{display:none}
+.stage-panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.stage-label{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;margin-bottom:2px}
+.stage-desc{font-size:8px;color:#555;line-height:1.6;margin-bottom:10px;font-style:italic}
+.info-chip{display:inline-block;font-size:7px;letter-spacing:.08em;padding:2px 6px;margin-bottom:8px;text-transform:uppercase}
+.chip-core{background:var(--yellow);color:#000}.chip-ideal{background:#7FFFD4;color:#000}
+.chip-perceived{background:var(--red);color:#fff}.chip-data{background:var(--blue);color:#fff}
+.journal-prompt{font-size:8px;color:#555;margin-bottom:3px}
+.journal-area{width:100%;background:#0d0d0d;border:1px solid #1e1e1e;color:var(--white);font-family:'DM Serif Display',serif;font-style:italic;font-size:11px;line-height:1.6;padding:9px;resize:none;height:72px;outline:none;transition:border-color .2s}
+.journal-area:focus{border-color:var(--yellow)}
+.slider-group{margin-bottom:10px}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.slider-name{font-size:7px;letter-spacing:.06em;color:#666;text-transform:uppercase}
+.slider-value{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--yellow)}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:#1e1e1e;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;cursor:pointer;transition:transform .1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
+.s-core::-webkit-slider-thumb{background:var(--yellow)}.s-ideal::-webkit-slider-thumb{background:#7FFFD4}
+.s-perceived::-webkit-slider-thumb{background:var(--red)}.s-data::-webkit-slider-thumb{background:var(--blue)}
+.tone-label{font-size:7px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:8px}
+.tone-swatches{display:flex;gap:4px;margin-bottom:5px;flex-wrap:wrap;padding-bottom:14px}
+.tone-swatch{width:26px;height:26px;border-radius:2px;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative}
+.tone-swatch.active{border-color:#fff;transform:scale(1.2)}
+.tone-swatch span{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);font-size:6px;color:#444;white-space:nowrap}
+.divider{border:none;border-top:1px solid #151515;margin:10px 0}
+
+/* BOTTOM */
+#bottom-nav{padding:10px 16px;border-top:1px solid #1a1a1a;display:flex;gap:5px;flex-shrink:0}
+.btn{flex:1;padding:10px 4px;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;transition:all .15s;user-select:none}
+.btn-prev{background:var(--blue);color:#fff}
+.btn-next{background:var(--red);color:#fff}
+.btn-finish{background:var(--yellow);color:#000;display:none}
+.btn:hover{opacity:.8;transform:translateY(-1px)}.btn:active{transform:none}
+
+/* VIEW TOGGLE */
+#view-controls{padding:8px 16px;border-top:1px solid #1a1a1a;display:flex;gap:5px;flex-shrink:0}
+.view-btn{flex:1;padding:7px 4px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid #222;background:transparent;color:#444;transition:all .15s}
+.view-btn.active{background:#222;color:#fff;border-color:#444}
+
+/* CANVAS */
+#canvas-wrap{flex:1;position:relative;background:#f0ece4;overflow:hidden}
+#canvas-wrap canvas{display:block}
+#hint-bar{position:absolute;bottom:0;left:0;right:0;padding:7px 16px;background:rgba(0,0,0,.85);font-size:7px;color:#444;letter-spacing:.05em;display:flex;gap:16px;align-items:center}
+.hint-item{display:flex;gap:4px;align-items:center}
+.hint-key{background:#161616;color:#666;padding:1px 4px;font-size:6px}
+#layer-badge{position:absolute;top:12px;right:12px;font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:.15em;padding:4px 9px;background:rgba(0,0,0,.8);color:var(--yellow);border:1px solid #1e1e1e}
+
+/* CROSS SECTION CANVAS */
+#crosssection-canvas{position:absolute;top:0;left:0;right:0;bottom:0;display:none}
+#crosssection-canvas.active{display:block}
+
+/* MODAL */
+#download-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;align-items:center;justify-content:center}
+#download-modal.open{display:flex}
+#chain-modal.open{display:flex!important}
+.modal-box{background:#0A0A0A;border:2px solid var(--yellow);padding:32px;max-width:480px;width:92%;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--yellow);letter-spacing:.1em;margin-bottom:5px}
+.modal-desc{font-size:9px;color:#666;line-height:1.7;margin-bottom:16px}
+.dl-section{font-size:7px;color:#333;letter-spacing:.1em;text-transform:uppercase;margin:14px 0 6px;border-top:1px solid #111;padding-top:12px}
+.dl-section:first-of-type{border-top:none;padding-top:0}
+.dl-opts{display:flex;flex-direction:column;gap:6px}
+.dl-btn{padding:12px 14px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.05em;cursor:pointer;border:1px solid #1e1e1e;background:#0d0d0d;color:var(--white);text-align:left;transition:all .15s;display:flex;justify-content:space-between;align-items:center;width:100%}
+.dl-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+.dl-note{font-size:7px;color:#333;font-weight:400}
+.modal-close{margin-top:14px;width:100%;padding:10px;background:var(--red);color:#fff;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;cursor:pointer;border:none;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <div class="title-main">FIGURING</div>
+    <div class="title-sub">identity through figurines · new paradigm of digital figures</div>
+  </div>
+  <div id="stage-nav">
+    <div class="stage-tab active" data-stage="core" onclick="goToStage('core')"><span class="tab-num">01</span>CORE</div>
+    <div class="stage-tab" data-stage="ideal" onclick="goToStage('ideal')"><span class="tab-num">02</span>IDEAL</div>
+    <div class="stage-tab" data-stage="perceived" onclick="goToStage('perceived')"><span class="tab-num">03</span>PERC.</div>
+    <div class="stage-tab" data-stage="data" onclick="goToStage('data')"><span class="tab-num">04</span>DATA</div>
+  </div>
+
+  <div id="controls-area">
+    <!-- CORE -->
+    <div class="stage-panel active" id="panel-core">
+      <div class="stage-label" style="color:var(--yellow)">The Core Self</div>
+      <div class="stage-desc">Bubble cluster — 3 to 25 spheres merging together like soap bubbles or sea foam. Each figurine grows a unique organic cluster. Watertight for resin 3D printing.</div>
+      <span class="info-chip chip-core">Private Reflection</span>
+      <div class="journal-prompt">↳ Write freely about your emotional world right now</div>
+      <textarea class="journal-area" id="journal-core" placeholder="What am I feeling most deeply? What contradicts itself inside me..." oninput="analyzeJournal()"></textarea>
+      <div class="divider"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Emotional Density (scale)</span><span class="slider-value" id="val-emo">50</span></div><input type="range" class="s-core" id="sl-emo" min="0" max="100" value="50" oninput="sv('sl-emo','val-emo');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Rhythm (3 → 25 bubbles)</span><span class="slider-value" id="val-rhy">50</span></div><input type="range" class="s-core" id="sl-rhy" min="0" max="100" value="50" oninput="sv('sl-rhy','val-rhy');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Contradictions (cluster spread)</span><span class="slider-value" id="val-con">30</span></div><input type="range" class="s-core" id="sl-con" min="0" max="100" value="30" oninput="sv('sl-con','val-con');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Pressure (vertical elongation)</span><span class="slider-value" id="val-prs">60</span></div><input type="range" class="s-core" id="sl-prs" min="0" max="100" value="60" oninput="sv('sl-prs','val-prs');build()"></div>
+      <div class="tone-label">Emotional Tone</div>
+      <div class="tone-swatches">
+        <div class="tone-swatch active" data-tone="ambivalence" style="background:#eb6190" onclick="setTone(this,'core')"><span>Rose</span></div>
+        <div class="tone-swatch" data-tone="fear" style="background:#f27233" onclick="setTone(this,'core')"><span>Coral</span></div>
+        <div class="tone-swatch" data-tone="anger" style="background:#da2650" onclick="setTone(this,'core')"><span>Cherry</span></div>
+        <div class="tone-swatch" data-tone="joy" style="background:#f9d038" onclick="setTone(this,'core')"><span>Citrus</span></div>
+        <div class="tone-swatch" data-tone="shame" style="background:#b85ac9" onclick="setTone(this,'core')"><span>Plum</span></div>
+      </div>
+    </div>
+
+    <!-- IDEAL -->
+    <div class="stage-panel" id="panel-ideal">
+      <div class="stage-label" style="color:#7FFFD4">The Ideal Self</div>
+      <div class="stage-desc">Ribbed pumpkin dome — smooth vertical ribs, thick rounded form. Fully solid & printable in translucent resin for a beautiful candy-glass toy.</div>
+      <span class="info-chip chip-ideal">Aspirational Layer</span>
+      <div class="journal-prompt">↳ Describe who you want to become</div>
+      <textarea class="journal-area" id="journal-ideal" placeholder="In 5 years I want to be... I aspire to..."></textarea>
+      <div class="divider"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Clarity (tight ↔ diffuse)</span><span class="slider-value" id="val-cla">60</span></div><input type="range" class="s-ideal" id="sl-cla" min="0" max="100" value="60" oninput="sv('sl-cla','val-cla');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Ambition (surface tension)</span><span class="slider-value" id="val-amb">70</span></div><input type="range" class="s-ideal" id="sl-amb" min="0" max="100" value="70" oninput="sv('sl-amb','val-amb');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Distance from Core (shell depth)</span><span class="slider-value" id="val-dis">50</span></div><input type="range" class="s-ideal" id="sl-dis" min="0" max="100" value="50" oninput="sv('sl-dis','val-dis');build()"></div>
+      <div class="tone-label">Ideal Color</div>
+      <div class="tone-swatches">
+        <div class="tone-swatch active" data-tone="pearl" style="background:#f9b890" onclick="setTone(this,'ideal')"><span>Peach</span></div>
+        <div class="tone-swatch" data-tone="fear" style="background:#f27233" onclick="setTone(this,'ideal')"><span>Orange</span></div>
+        <div class="tone-swatch" data-tone="gold" style="background:#f9d038" onclick="setTone(this,'ideal')"><span>Gold</span></div>
+        <div class="tone-swatch" data-tone="aqua" style="background:#62ebd2" onclick="setTone(this,'ideal')"><span>Mint</span></div>
+      </div>
+    </div>
+
+    <!-- PERCEIVED -->
+    <div class="stage-panel" id="panel-perceived">
+      <div class="stage-label" style="color:var(--red)">The Perceived Self</div>
+      <div class="stage-desc">Wavy amoeba blob — organic undulating perimeter, flat base. Prints beautifully in coloured resin with the gradient baked into the candy gloss finish.</div>
+      <span class="info-chip chip-perceived">Social Layer</span>
+      <div class="journal-prompt">↳ How do others describe you?</div>
+      <textarea class="journal-area" id="journal-perceived" placeholder="People say I am... My social roles are..."></textarea>
+      <div class="divider"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Role Density (facet count)</span><span class="slider-value" id="val-rol">55</span></div><input type="range" class="s-perceived" id="sl-rol" min="0" max="100" value="55" oninput="sv('sl-rol','val-rol');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Stereotype (regularity)</span><span class="slider-value" id="val-ste">40</span></div><input type="range" class="s-perceived" id="sl-ste" min="0" max="100" value="40" oninput="sv('sl-ste','val-ste');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Validation (gloss ↔ matte)</span><span class="slider-value" id="val-val">65</span></div><input type="range" class="s-perceived" id="sl-val" min="0" max="100" value="65" oninput="sv('sl-val','val-val');build()"></div>
+      <div class="tone-label">Perceived Color</div>
+      <div class="tone-swatches">
+        <div class="tone-swatch active" data-tone="bone" style="background:#ebe896" onclick="setTone(this,'perceived')"><span>Yuzu</span></div>
+        <div class="tone-swatch" data-tone="void" style="background:#c76be8" onclick="setTone(this,'perceived')"><span>Lavend.</span></div>
+        <div class="tone-swatch" data-tone="neon" style="background:#9eeb47" onclick="setTone(this,'perceived')"><span>Lime</span></div>
+        <div class="tone-swatch" data-tone="aqua" style="background:#62ebd2" onclick="setTone(this,'perceived')"><span>Mint</span></div>
+      </div>
+    </div>
+
+    <!-- DATA -->
+    <div class="stage-panel" id="panel-data">
+      <div class="stage-label" style="color:var(--blue)">The Data Self</div>
+      <div class="stage-desc">Squircle jelly form — superellipse silhouette (circle to rounded square). 3D print in translucent PETG or resin for a satisfying chunky toy.</div>
+      <span class="info-chip chip-data">Algorithmic Layer</span>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Repetition (dimple depth)</span><span class="slider-value" id="val-rep">60</span></div><input type="range" class="s-data" id="sl-rep" min="0" max="100" value="60" oninput="sv('sl-rep','val-rep');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Volatility (form inflation)</span><span class="slider-value" id="val-vol">45</span></div><input type="range" class="s-data" id="sl-vol" min="0" max="100" value="45" oninput="sv('sl-vol','val-vol');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Silence (surface erosion)</span><span class="slider-value" id="val-sil">35</span></div><input type="range" class="s-data" id="sl-sil" min="0" max="100" value="35" oninput="sv('sl-sil','val-sil');build()"></div>
+      <div class="slider-group"><div class="slider-label"><span class="slider-name">Digital Dominance (dimple density)</span><span class="slider-value" id="val-dig">70</span></div><input type="range" class="s-data" id="sl-dig" min="0" max="100" value="70" oninput="sv('sl-dig','val-dig');build()"></div>
+      <div class="tone-label">Data Color</div>
+      <div class="tone-swatches">
+        <div class="tone-swatch active" data-tone="ambivalence" style="background:#eb6190" onclick="setTone(this,'data')"><span>Rose</span></div>
+        <div class="tone-swatch" data-tone="void" style="background:#c76be8" onclick="setTone(this,'data')"><span>Violet</span></div>
+        <div class="tone-swatch" data-tone="silver" style="background:#aad8f5" onclick="setTone(this,'data')"><span>Ice</span></div>
+        <div class="tone-swatch" data-tone="cyan" style="background:#47d4eb" onclick="setTone(this,'data')"><span>Aqua</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-controls">
+    <button class="view-btn active" id="vbtn-3d" onclick="setView('3d')">3D VIEW</button>
+    <button class="view-btn" id="vbtn-section" onclick="setView('section')">CROSS SECTION</button>
+  </div>
+
+  <div id="bottom-nav">
+    <button class="btn btn-prev" id="btn-prev" onclick="prevStage()" style="display:none">← Prev</button>
+    <button class="btn btn-next" id="btn-next" onclick="nextStage()">Next →</button>
+    <button class="btn btn-finish" id="btn-finish" onclick="openDownload()">↓ Export</button>
+  </div>
+</div>
+
+<!-- CANVAS AREA -->
+<div id="canvas-wrap">
+  <div id="layer-badge">LAYER: CORE</div>
+  <canvas id="section-canvas" style="display:none;position:absolute;top:0;left:0;background:#0e0e12"></canvas>
+  <div id="hint-bar">
+    <div class="hint-item"><span class="hint-key">DRAG</span>Rotate</div>
+    <div class="hint-item"><span class="hint-key">SCROLL</span>Zoom</div>
+    <div class="hint-item"><span class="hint-key">DBL-CLICK</span>Toggle layer</div>
+    <div class="hint-item"><span class="hint-key">1-4</span>Layers</div>
+    <div class="hint-item"><span class="hint-key">R</span>Reset</div>
+    <div class="hint-item" style="margin-left:auto">
+      <button onclick="openChainPreview()" style="background:var(--yellow);color:#000;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase">⛓ CHAIN PREVIEW</button>
+      <button onclick="openWallpaper()" style="background:#eb6190;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase;margin-left:6px">✦ WALLPAPER</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- WALLPAPER MODAL -->
+<div id="wallpaper-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:300;flex-direction:row;align-items:stretch">
+  <!-- Left: controls -->
+  <div style="width:300px;min-width:300px;background:#111;border-right:1px solid #222;display:flex;flex-direction:column;overflow-y:auto;padding:20px 18px;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#eb6190;letter-spacing:.1em">WALLPAPER</div>
+      <button onclick="closeWallpaper()" style="background:#E8272A;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;padding:7px 12px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:8px;color:#555;font-style:italic;line-height:1.6">Tile your figurine into a phone wallpaper or Instagram story. Customise layout, background and style.</div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-top:4px">Format</div>
+    <div style="display:flex;gap:6px">
+      <button class="wp-fmt-btn active" data-fmt="story" onclick="wpSetFormat(this,'story')" style="flex:1;padding:8px 4px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid #eb6190;background:#eb619022;color:#eb6190">STORY<br><span style="font-weight:400;font-size:6px;color:#555">1080×1920</span></button>
+      <button class="wp-fmt-btn" data-fmt="square" onclick="wpSetFormat(this,'square')" style="flex:1;padding:8px 4px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid #333;background:transparent;color:#555">SQUARE<br><span style="font-weight:400;font-size:6px">1080×1080</span></button>
+      <button class="wp-fmt-btn" data-fmt="wallpaper" onclick="wpSetFormat(this,'wallpaper')" style="flex:1;padding:8px 4px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid #333;background:transparent;color:#555">PHONE<br><span style="font-weight:400;font-size:6px">1080×2340</span></button>
+    </div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase">Layout</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="wp-lay-btn active" data-lay="grid23" onclick="wpSetLayout(this,'grid23')" style="padding:7px 10px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #eb6190;background:#eb619022;color:#eb6190">2×3</button>
+      <button class="wp-lay-btn" data-lay="grid34" onclick="wpSetLayout(this,'grid34')" style="padding:7px 10px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">3×4</button>
+      <button class="wp-lay-btn" data-lay="grid44" onclick="wpSetLayout(this,'grid44')" style="padding:7px 10px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">4×4</button>
+      <button class="wp-lay-btn" data-lay="scattered" onclick="wpSetLayout(this,'scattered')" style="padding:7px 10px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">SCATTER</button>
+      <button class="wp-lay-btn" data-lay="bigone" onclick="wpSetLayout(this,'bigone')" style="padding:7px 10px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">SINGLE</button>
+    </div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase">Background</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div class="wp-bg-btn active" data-bg="cream" onclick="wpSetBg(this,'cream')" style="width:32px;height:32px;background:#f0ece4;border:2px solid #eb6190;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="black" onclick="wpSetBg(this,'black')" style="width:32px;height:32px;background:#0a0a0a;border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="blush" onclick="wpSetBg(this,'blush')" style="width:32px;height:32px;background:#fce8ee;border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="midnight" onclick="wpSetBg(this,'midnight')" style="width:32px;height:32px;background:#0d0820;border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="sage" onclick="wpSetBg(this,'sage')" style="width:32px;height:32px;background:#e8f0e8;border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="grad-pink" onclick="wpSetBg(this,'grad-pink')" style="width:32px;height:32px;background:linear-gradient(135deg,#fce4ee,#e8d0f8);border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="grad-peach" onclick="wpSetBg(this,'grad-peach')" style="width:32px;height:32px;background:linear-gradient(135deg,#fff0e0,#ffe0d0);border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+      <div class="wp-bg-btn" data-bg="grad-night" onclick="wpSetBg(this,'grad-night')" style="width:32px;height:32px;background:linear-gradient(180deg,#0d0820,#1a0828);border:2px solid transparent;cursor:pointer;border-radius:3px"></div>
+    </div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase">Variation per tile</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="range" id="wp-variation" min="0" max="100" value="40" style="-webkit-appearance:none;flex:1;height:2px;background:#333;outline:none;cursor:pointer" oninput="wpRender()">
+      <span id="wp-var-val" style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#eb6190;min-width:24px">40</span>
+    </div>
+    <div style="font-size:6px;color:#444;font-style:italic">Higher = more unique figurines per tile</div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase">Rotation</div>
+    <div style="display:flex;gap:6px">
+      <button class="wp-rot-btn active" data-rot="0" onclick="wpSetRot(this,0)" style="flex:1;padding:6px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #eb6190;background:#eb619022;color:#eb6190">UPRIGHT</button>
+      <button class="wp-rot-btn" data-rot="1" onclick="wpSetRot(this,1)" style="flex:1;padding:6px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">RANDOM</button>
+    </div>
+
+    <div style="font-size:7px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-top:6px">Show Label</div>
+    <div style="display:flex;gap:6px">
+      <button class="wp-lbl-btn active" data-lbl="0" onclick="wpSetLbl(this,0)" style="flex:1;padding:6px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #eb6190;background:#eb619022;color:#eb6190">NONE</button>
+      <button class="wp-lbl-btn" data-lbl="1" onclick="wpSetLbl(this,1)" style="flex:1;padding:6px;font-family:'Space Mono',monospace;font-size:7px;font-weight:700;cursor:pointer;border:1px solid #333;background:transparent;color:#555">FIGURING</button>
+    </div>
+
+    <button onclick="wpRender()" style="margin-top:8px;padding:12px;background:#eb6190;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;width:100%">↺ REGENERATE</button>
+    <button onclick="wpDownload()" style="padding:12px;background:var(--yellow);color:#000;border:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;width:100%">↓ SAVE IMAGE</button>
+    <div id="wp-size-note" style="font-size:7px;color:#444;text-align:center;margin-top:-6px">1080 × 1920 px · PNG</div>
+  </div>
+
+  <!-- Right: preview -->
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#1a1a1a;overflow:hidden;padding:20px">
+    <div id="wp-preview-wrap" style="position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+      <canvas id="wp-canvas" style="max-width:100%;max-height:100%;image-rendering:pixelated;box-shadow:0 8px 60px rgba(0,0,0,0.7)"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- CHAIN PREVIEW MODAL -->
+<div id="chain-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:200;flex-direction:column;align-items:center;justify-content:flex-start">
+  <div style="width:100%;max-width:900px;padding:28px 32px 0;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--yellow);letter-spacing:.1em">CHAIN OF IDENTITY</div>
+      <div style="font-family:'DM Serif Display',serif;font-style:italic;font-size:11px;color:#555;margin-top:3px;max-width:500px;line-height:1.6">Each year you create a new figurine. The plug at the base connects into the socket of the year before — a growing chain of self over time.</div>
+    </div>
+    <button onclick="closeChainPreview()" style="background:var(--red);color:#fff;border:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;padding:10px 18px;cursor:pointer;flex-shrink:0;margin-bottom:4px">✕ CLOSE</button>
+  </div>
+
+  <!-- Connector spec diagram -->
+  <div style="display:flex;gap:24px;padding:16px 32px 12px;flex-shrink:0;border-bottom:1px solid #1a1a1a;width:100%;max-width:900px">
+    <div style="flex:1">
+      <div style="font-size:8px;color:var(--yellow);letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:8px">↓ PLUG (this year's base)</div>
+      <svg width="100%" height="68" viewBox="0 0 220 68">
+        <rect x="82" y="8" width="56" height="38" rx="4" fill="none" stroke="#888" stroke-width="1.5"/>
+        <rect x="90" y="38" width="10" height="18" rx="2" fill="none" stroke="#F5D000" stroke-width="1.2"/>
+        <rect x="120" y="38" width="10" height="18" rx="2" fill="none" stroke="#F5D000" stroke-width="1.2"/>
+        <line x1="82" y1="55" x2="138" y2="55" stroke="#444" stroke-width="0.7" stroke-dasharray="3,3"/>
+        <text x="6" y="30" font-family="monospace" font-size="7" fill="#555">Ø8.0mm</text>
+        <text x="6" y="42" font-family="monospace" font-size="7" fill="#555">shaft</text>
+        <text x="148" y="30" font-family="monospace" font-size="7" fill="#F5D000">fins lock</text>
+        <text x="148" y="42" font-family="monospace" font-size="7" fill="#F5D000">with 90°</text>
+        <text x="148" y="54" font-family="monospace" font-size="7" fill="#F5D000">twist</text>
+        <text x="110" y="66" font-family="monospace" font-size="7" fill="#666" text-anchor="middle">10mm</text>
+      </svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:8px;color:#7FFFD4;letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:8px">↑ SOCKET (next year's crown)</div>
+      <svg width="100%" height="68" viewBox="0 0 220 68">
+        <rect x="82" y="8" width="56" height="38" rx="4" fill="none" stroke="#888" stroke-width="1.5"/>
+        <rect x="100" y="8" width="20" height="38" rx="2" fill="#0a0a12" stroke="#7FFFD4" stroke-width="1.2"/>
+        <rect x="92" y="40" width="10" height="14" rx="1" fill="none" stroke="#333" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <rect x="118" y="40" width="10" height="14" rx="1" fill="none" stroke="#333" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <text x="6" y="30" font-family="monospace" font-size="7" fill="#555">Ø8.4mm</text>
+        <text x="6" y="42" font-family="monospace" font-size="7" fill="#555">bore</text>
+        <text x="148" y="30" font-family="monospace" font-size="7" fill="#7FFFD4">0.2mm</text>
+        <text x="148" y="42" font-family="monospace" font-size="7" fill="#7FFFD4">clearance</text>
+        <text x="148" y="54" font-family="monospace" font-size="7" fill="#7FFFD4">per side</text>
+      </svg>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:8px;color:#E8272A;letter-spacing:.1em;font-family:'Space Mono',monospace;margin-bottom:6px;text-transform:uppercase">Assembly</div>
+      <div style="font-size:8px;color:#555;font-family:'Space Mono',monospace;line-height:2">
+        1. Print each year's figure<br>
+        2. Insert plug into socket<br>
+        3. Twist 90° to lock fins<br>
+        4. Chain grows each year<br>
+        5. Never break the chain
+      </div>
+    </div>
+  </div>
+
+  <div id="chain-canvas-wrap" style="flex:1;width:100%;max-width:900px;min-height:0;position:relative;cursor:grab"></div>
+  <div style="padding:10px 32px;font-size:8px;color:#333;font-family:'Space Mono',monospace;flex-shrink:0">
+    DRAG TO ROTATE · SCROLL TO ZOOM · YEAR N (BRIGHT) IS THE CURRENT FIGURINE
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="download-modal">
+  <div class="modal-box">
+    <div class="modal-title">Export Figurine</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;border:1px solid #e8b84b;background:#1a160a"><span style="font-size:9px;color:#e8b84b;letter-spacing:.08em;font-family:'Space Mono',monospace">⬡ 3D PRINT READY — all forms are watertight closed meshes with flat bases, min 2.5mm wall thickness. Optimized for resin (SLA/MSLA) and FDM printing. Recommended: translucent PETG or resin for candy-glass effect.</span></div>
+<div class="modal-desc">Download your identity figurine. The JPEG captures the current view. The SVG is a cross-section vector. For 3D printing, export the exact STL from the live preview mesh. Optional OpenSCAD wrappers import those exact STL files so the form matches the preview.</div>
+    <div class="dl-section">Image Formats</div>
+    <div class="dl-opts">
+      <button class="dl-btn" onclick="downloadJPEG()">Download 3D View as JPEG<span class="dl-note">Current render</span></button>
+      <button class="dl-btn" onclick="downloadSectionSVG()">Download Cross-Section as SVG<span class="dl-note">Line art vector</span></button>
+    </div>
+    <div class="dl-section">3D Print — Exact STL</div>
+    <div class="dl-opts">
+      <button class="dl-btn" onclick="downloadExactSTL('all')">Full Figure — All Layers<span class="dl-note">.stl — exact preview mesh</span></button>
+      <button class="dl-btn" onclick="downloadExactSTL('core')">Core Only<span class="dl-note">.stl — exact preview mesh</span></button>
+      <button class="dl-btn" onclick="downloadExactSTL('ideal')">Ideal Only<span class="dl-note">.stl — exact preview mesh</span></button>
+      <button class="dl-btn" onclick="downloadExactSTL('perceived')">Perceived Only<span class="dl-note">.stl — exact preview mesh</span></button>
+      <button class="dl-btn" onclick="downloadExactSTL('data')">Data + Stand<span class="dl-note">.stl — exact preview mesh</span></button>
+    </div>
+    <div class="dl-section">OpenSCAD Wrapper</div>
+    <div class="dl-opts">
+      <button class="dl-btn" onclick="downloadSCADWrapper('all')">Full Figure — All Layers<span class="dl-note">.scad imports exact STL</span></button>
+      <button class="dl-btn" onclick="downloadSCADWrapper('core')">Core Only<span class="dl-note">.scad imports exact STL</span></button>
+      <button class="dl-btn" onclick="downloadSCADWrapper('ideal')">Ideal Only<span class="dl-note">.scad imports exact STL</span></button>
+      <button class="dl-btn" onclick="downloadSCADWrapper('perceived')">Perceived Only<span class="dl-note">.scad imports exact STL</span></button>
+      <button class="dl-btn" onclick="downloadSCADWrapper('data')">Data + Stand<span class="dl-note">.scad imports exact STL</span></button>
+    </div>
+    <button class="modal-close" onclick="closeDownload()">✕ Close</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// PARAMS & STATE
+// ══════════════════════════════════════════════════
+const stages = ['core','ideal','perceived','data'];
+let stageIdx = 0;
+let viewMode = '3d'; // '3d' | 'section'
+
+const P = {
+  core:      { emo:50, rhy:50, con:30, prs:60, tone:'ambivalence' },
+  ideal:     { cla:60, amb:70, dis:50, tone:'aqua' },
+  perceived: { rol:55, ste:40, val:65, tone:'red' },
+  data:      { rep:60, vol:45, sil:35, dig:70, tone:'blue' }
+};
+
+const TONE = {
+  // Blooming Moon candy palette — jelly translucent hues
+  ambivalence:[0.92,0.38,0.55], fear:[0.95,0.45,0.20], anger:[0.85,0.15,0.30], joy:[0.98,0.82,0.22], shame:[0.72,0.35,0.78],
+  aqua:[0.38,0.92,0.82],  pearl:[0.98,0.72,0.58], silver:[0.68,0.85,0.95], gold:[0.98,0.72,0.18],
+  red:[0.96,0.28,0.22],   stone:[0.88,0.62,0.38], bone:[0.92,0.90,0.60],   obsidian:[0.55,0.28,0.72],
+  blue:[0.28,0.58,0.98],  cyan:[0.28,0.88,0.78],  void:[0.78,0.42,0.92],   neon:[0.62,0.92,0.28]
+};
+// Secondary gradient colours for each tone (inner glow / dark centre)
+const TONE_INNER = {
+  ambivalence:[0.22,0.08,0.28], fear:[0.55,0.12,0.05], anger:[0.35,0.02,0.08], joy:[0.72,0.38,0.02], shame:[0.28,0.05,0.35],
+  aqua:[0.05,0.38,0.32],        pearl:[0.72,0.22,0.18], silver:[0.12,0.32,0.55], gold:[0.65,0.28,0.02],
+  red:[0.48,0.02,0.05],         stone:[0.42,0.18,0.05], bone:[0.62,0.45,0.12],   obsidian:[0.18,0.02,0.35],
+  blue:[0.02,0.08,0.55],        cyan:[0.02,0.35,0.32],  void:[0.28,0.02,0.48],   neon:[0.12,0.42,0.02]
+};
+function tcInner(tone){ const c=TONE_INNER[tone]||[0.1,0.1,0.1]; return new THREE.Color(c[0],c[1],c[2]); }
+
+const layerVis = { core:true, ideal:false, perceived:false, data:false };
+
+// ── helpers
+function sv(id,vid){ const v=document.getElementById(id).value; document.getElementById(vid).textContent=v; }
+function lerp(a,b,t){ return a+(b-a)*Math.max(0,Math.min(1,t)); }
+function tc(tone){ const c=TONE[tone]||[0.5,0.5,0.5]; return new THREE.Color(c[0],c[1],c[2]); }
+function toHex(tone){ const c=TONE[tone]||[0.5,0.5,0.5]; return '#'+c.map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join(''); }
+
+function setTone(el,stage){
+  document.querySelectorAll(`#panel-${stage} .tone-swatch`).forEach(s=>s.classList.remove('active'));
+  el.classList.add('active'); P[stage].tone=el.dataset.tone; build();
+}
+function goToStage(s){ stageIdx=stages.indexOf(s); activateStage(); }
+function nextStage(){ if(stageIdx<3){stageIdx++;activateStage();} }
+function prevStage(){ if(stageIdx>0){stageIdx--;activateStage();} }
+
+function activateStage(){
+  layerVis.core=true; layerVis.ideal=stageIdx>=1; layerVis.perceived=stageIdx>=2; layerVis.data=stageIdx>=3;
+  syncVis();
+  const s=stages[stageIdx];
+  document.querySelectorAll('.stage-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`panel-${s}`).classList.add('active');
+  document.querySelectorAll('.stage-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.stage-tab[data-stage="${s}"]`).classList.add('active');
+  document.getElementById('btn-prev').style.display=stageIdx===0?'none':'flex';
+  document.getElementById('btn-next').style.display=stageIdx===3?'none':'flex';
+  document.getElementById('btn-finish').style.display=stageIdx===3?'flex':'none';
+  const labels=['LAYER: CORE','CORE · IDEAL','CORE · IDEAL · PERCEIVED','ALL LAYERS'];
+  document.getElementById('layer-badge').textContent=labels[stageIdx];
+  if(viewMode==='section') drawSection();
+}
+
+function analyzeJournal(){
+  const text=document.getElementById('journal-core').value;
+  if(!text) return;
+  const words=text.split(/\s+/).filter(w=>w.length>0).length;
+  const feel=(text.match(/\b(feel|felt|afraid|angry|sad|happy|ashamed|love|hate|confused|lost|hopeful|anxious|joy|fear|pain|hurt|overwhelm)\b/gi)||[]).length;
+  const emo=Math.min(100,20+feel*8+words*0.3);
+  const sents=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+  const rhy=Math.min(100,(sents.length?words/sents.length:10)*4);
+  P.core.emo=emo; P.core.rhy=rhy;
+  document.getElementById('sl-emo').value=emo; document.getElementById('val-emo').textContent=Math.round(emo);
+  document.getElementById('sl-rhy').value=rhy; document.getElementById('val-rhy').textContent=Math.round(rhy);
+  build();
+}
+
+function setView(mode){
+  viewMode=mode;
+  document.getElementById('vbtn-3d').classList.toggle('active',mode==='3d');
+  document.getElementById('vbtn-section').classList.toggle('active',mode==='section');
+  const sc=document.getElementById('section-canvas');
+  if(mode==='section'){ renderer.domElement.style.display='none'; sc.style.display='block'; drawSection(); }
+  else { renderer.domElement.style.display='block'; sc.style.display='none'; }
+}
+
+function openDownload(){ document.getElementById('download-modal').classList.add('open'); }
+function closeDownload(){ document.getElementById('download-modal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════
+// NOISE
+// ══════════════════════════════════════════════════
+function hash(n){ const x=Math.sin(n*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+function hash3(x,y,z){ return hash(x+57*y+113*z); }
+function noise3(x,y,z){
+  const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z);
+  const fx=x-ix,fy=y-iy,fz=z-iz;
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy),uz=fz*fz*(3-2*fz);
+  const v=(dx,dy,dz)=>hash3(ix+dx,iy+dy,iz+dz);
+  return lerp(lerp(lerp(v(0,0,0),v(1,0,0),ux),lerp(v(0,1,0),v(1,1,0),ux),uy),
+              lerp(lerp(v(0,0,1),v(1,0,1),ux),lerp(v(0,1,1),v(1,1,1),ux),uy),uz);
+}
+function fbm(x,y,z,oct=5){ let v=0,a=0.5; for(let i=0;i<oct;i++){v+=a*noise3(x,y,z);a*=0.48;x*=2.1;y*=2.1;z*=2.1;} return v; }
+
+// ══════════════════════════════════════════════════
+// GEOMETRY — Blooming Moon jelly candy forms
+// All meshes are SOLID & WATERTIGHT for 3D printing:
+//   • minimum wall 2.5mm, no overhangs >45°
+//   • flat bottom base on every form
+//   • toy-safe rounded edges, no sharp tips
+//   • full closed manifold geometry
+// ══════════════════════════════════════════════════
+
+// ── SHARED: flat closed base cap ──
+function addBaseCap(verts, inds, uvs, segs, baseY, baseR){
+  const ci = verts.length / 3;
+  verts.push(0, baseY, 0); uvs.push(0.5, 0.5);
+  for(let si=0; si<=segs; si++){
+    const a = (si/segs)*Math.PI*2;
+    verts.push(baseR*Math.cos(a), baseY, baseR*Math.sin(a));
+    uvs.push(0.5+0.5*Math.cos(a), 0.5+0.5*Math.sin(a));
+  }
+  for(let si=0; si<segs; si++){
+    inds.push(ci, ci+1+si, ci+1+(si+1)%segs);
+  }
+}
+
+// ── CORE: Bubble cluster — clumps of spheres like bathtub bubbles ──
+// True metaball isosurface: N spheres (3–25) distributed in organic clusters.
+// Low rhythm = 3–5 large fused blobs. High rhythm = 20–25 small tight bubbles.
+// Each build is seeded from slider values so shape is deterministic but unique.
+// 3D-print ready: solid closed mesh, flat base from bottom of cluster.
+function makeCoreGeo(emo, rhy, con, prs){
+  // ── Generate bubble centers ──
+  const numBubbles = Math.round(lerp(3, 25, rhy));
+  const bubbles = [];
+  // Seeded pseudo-random from slider values for determinism
+  function seededRand(i, salt){
+    return hash(i * 17.3 + salt * 91.7 + numBubbles * 3.1);
+  }
+
+  // Cluster layout: primary cluster + optional satellite sub-clusters
+  const clusterSpread = lerp(0.3, 1.1, con); // how spread out bubbles are
+  const bigR   = lerp(0.55, 0.32, rhy);      // large bubbles at low rhythm
+  const smallR = lerp(0.28, 0.14, rhy);      // small bubbles at high rhythm
+
+  for(let i = 0; i < numBubbles; i++){
+    const t = i / Math.max(1, numBubbles - 1);
+    // Organic spiral placement — fills space unevenly like real bubble clusters
+    const spiralAngle = i * 2.399 + seededRand(i, 1.0) * 0.8;
+    // Radial distance: first few bubbles close to center, rest spread out
+    const radialDist = clusterSpread * (0.15 + Math.pow(t, 0.6) * 0.85 + seededRand(i, 2.0) * 0.25);
+    const elevAngle  = (seededRand(i, 3.0) - 0.5) * Math.PI * 0.9 * lerp(0.3, 1.0, con);
+    const bx = radialDist * Math.cos(spiralAngle) * Math.cos(elevAngle);
+    const by = radialDist * Math.sin(elevAngle) * lerp(0.6, 1.0, prs);
+    const bz = radialDist * Math.sin(spiralAngle) * Math.cos(elevAngle);
+    // Radius: mix of large + small, with organic variation
+    const br = lerp(bigR, smallR, t) * (0.7 + seededRand(i, 4.0) * 0.6);
+    bubbles.push({x:bx, y:by, z:bz, r:br});
+  }
+
+  // ── Metaball field ──
+  // Wyvill smooth kernel: C2 continuous, merges bubbles naturally
+  function field(px, py, pz){
+    let f = 0;
+    for(const b of bubbles){
+      const dx=px-b.x, dy=py-b.y, dz=pz-b.z;
+      const r2 = (dx*dx+dy*dy+dz*dz) / (b.r*b.r);
+      if(r2 < 1.0){
+        const k = 1.0 - r2;
+        f += k*k*k; // Wyvill cubic falloff
+      }
+    }
+    return f;
+  }
+  const ISO = lerp(0.28, 0.42, lerp(0.5,0.0,rhy)*0.5 + 0.25); // lower iso = more merging
+
+  // ── March surface via sphere-sampling ──
+  const segs=112, rings=112;
+  const verts=[], inds=[], uvs=[];
+
+  // Find bounding radius of cluster
+  let maxBR = 0;
+  for(const b of bubbles) maxBR = Math.max(maxBR, Math.sqrt(b.x*b.x+b.y*b.y+b.z*b.z) + b.r * 1.5);
+  maxBR = Math.max(maxBR, 1.8);
+
+  for(let ri=0; ri<=rings; ri++){
+    const v = ri/rings;
+    const phi = v * Math.PI;
+    const sinp = Math.sin(phi), cosp = Math.cos(phi);
+
+    for(let si=0; si<=segs; si++){
+      const u = si/segs;
+      const theta = u * Math.PI * 2;
+      const nx = sinp*Math.cos(theta), ny = cosp, nz = sinp*Math.sin(theta);
+
+      // Binary search for isosurface along ray from origin
+      let rLo = 0.02, rHi = maxBR;
+      const fHi = field(nx*rHi, ny*rHi, nz*rHi);
+      let r;
+      if(fHi >= ISO){
+        r = rHi; // ray exits inside field — clamp
+      } else if(field(nx*rLo, ny*rLo, nz*rLo) < ISO){
+        r = rLo; // ray never enters field — minimum size
+      } else {
+        for(let iter=0; iter<16; iter++){
+          const rMid = (rLo+rHi)*0.5;
+          if(field(nx*rMid, ny*rMid, nz*rMid) > ISO) rLo=rMid; else rHi=rMid;
+        }
+        r = (rLo+rHi)*0.5;
+      }
+
+      const sc = emo * (0.88 + prs*0.12);
+      r = Math.max(4, r * sc);
+
+      // Flatten bottom for 3D printing
+      const flatBase = v > 0.84 ? lerp(1.0, 0.12, (v-0.84)/0.16) : 1.0;
+      const yStretch = 1.0 + prs*0.18;
+      verts.push(r*sinp*Math.cos(theta), r*cosp*yStretch*flatBase, r*sinp*Math.sin(theta));
+      uvs.push(u, v);
+    }
+  }
+  for(let ri=0; ri<rings; ri++){
+    for(let si=0; si<segs; si++){
+      const a=ri*(segs+1)+si, b=a+1, c=a+segs+1, d=c+1;
+      inds.push(a,c,b); inds.push(b,c,d);
+    }
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(inds); g.computeVertexNormals();
+  return g;
+}
+function makeCoreGroup(emo,rhy,con,prs,color){
+  const grp=new THREE.Group();
+  const g=makeCoreGeo(emo,rhy,con,prs);
+  const m=new THREE.MeshPhysicalMaterial({color:color||new THREE.Color(0xff88aa),roughness:0.05,metalness:0,clearcoat:1,transparent:true,opacity:0.82,side:THREE.DoubleSide});
+  grp.add(new THREE.Mesh(g,m));
+  return grp;
+}
+
+// ── IDEAL: Ribbed pumpkin sphere — like the orange ribbed candy top-right ──
+// Smooth vertical ribs running pole to pole, creating a pumpkin silhouette.
+// Ribs = amb (ambition creates more defined ridges).
+// Solid, toy-safe, printable — ribs are surface detail not through-holes.
+function makeIdealGeo(cla, amb, dis, coreEmo, corePrs){
+  const segs=128, rings=96;
+  const verts=[], inds=[], uvs=[];
+
+  const sc = coreEmo * (1.0 + corePrs*0.15) * lerp(1.3, 2.0, dis);
+  const ribCount = Math.round(lerp(5, 12, amb));      // number of vertical ribs
+  const ribDepth = lerp(0.04, 0.28, amb);             // rib concavity depth
+  const clarity  = lerp(0.4, 1.0, cla);              // 1.0 = crisp ribs, 0 = smooth
+
+  for(let ri=0; ri<=rings; ri++){
+    const v = ri/rings;
+    const phi = v * Math.PI;
+    const sinp = Math.sin(phi), cosp = Math.cos(phi);
+
+    for(let si=0; si<=segs; si++){
+      const u = si/segs;
+      const theta = u * Math.PI * 2;
+
+      // Base ovoid
+      let r = sc * sinp * (0.6 + 0.4*sinp);
+
+      // RIB CHANNELS — concave grooves running pole-to-pole
+      // cos wave creates alternating ridge/groove pattern
+      const ribWave = Math.cos(theta * ribCount);
+      // Sharpen ribs by power — high clarity = sharp transition, low = soft
+      const ribProfile = Math.pow(Math.max(0, -ribWave), lerp(4.0, 1.2, clarity));
+      r -= ribDepth * sc * ribProfile * sinp; // sinp fades ribs at poles
+
+      // Slight top-heaviness — jelly candy is rounder/thicker at top
+      r *= (1.0 + 0.08 * cosp * 0.5);
+
+      r = Math.max(3, r);
+
+      // Bottom flatten for printing
+      const flatBase = v > 0.88 ? lerp(1.0, 0.15, (v-0.88)/0.12) : 1.0;
+      const yRaw = r * cosp * lerp(0.85, 1.15, amb);
+      const y = yRaw * flatBase;
+
+      verts.push(r*sinp*Math.cos(theta), y, r*sinp*Math.sin(theta));
+      uvs.push(u, v);
+    }
+  }
+  for(let ri=0; ri<rings; ri++){
+    for(let si=0; si<segs; si++){
+      const a=ri*(segs+1)+si, b=a+1, c=a+segs+1, d=c+1;
+      inds.push(a,c,b); inds.push(b,c,d);
+    }
+  }
+  const baseY = -sc * lerp(0.85, 1.15, amb) * 0.98;
+  addBaseCap(verts, inds, uvs, segs, baseY, sc * 0.20);
+
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(inds); g.computeVertexNormals();
+  return g;
+}
+
+// ── PERCEIVED: Wavy amoeba blob — like the yellow-green/lavender bottom candy ──
+// Irregular organic perimeter wave, smooth top, thick rounded form.
+// rol = number of perimeter waves, ste = symmetry vs randomness.
+function makePerceivedGeo(rol, ste, val, coreEmo, corePrs, idealDis){
+  const segs=128, rings=96;
+  const verts=[], inds=[], uvs=[];
+
+  const sc = coreEmo * (0.9 + corePrs*0.15) * lerp(1.6, 2.8, idealDis);
+  const waveCount = Math.round(lerp(5, 14, rol/100));  // perimeter waves
+  const waveAmp   = lerp(0.04, 0.22, rol/100);         // wave amplitude
+  const symmetry  = lerp(0.0, 1.0, ste/100);           // 1 = symmetric, 0 = organic random
+
+  for(let ri=0; ri<=rings; ri++){
+    const v = ri/rings;
+    const phi = v * Math.PI;
+    const sinp = Math.sin(phi), cosp = Math.cos(phi);
+
+    for(let si=0; si<=segs; si++){
+      const u = si/segs;
+      const theta = u * Math.PI * 2;
+
+      // Base disk-like form — flatter than core, more like a puddle/dome
+      let r = sc * sinp * (0.5 + 0.5 * Math.sin(phi * 0.7));
+
+      // WAVY PERIMETER — lobing around equator only (sinp fades at poles)
+      const symWave = Math.cos(theta * waveCount);
+      const noisyWave = noise3(Math.cos(theta)*2.1 + 1.3, 0.5, Math.sin(theta)*2.1 + 0.7);
+      const wave = lerp(noisyWave - 0.5, symWave * 0.5, symmetry);
+      r += wave * waveAmp * sc * sinp;
+
+      // Low-frequency organic drift
+      const drift = fbm(Math.cos(theta)*1.2, cosp*0.8, Math.sin(theta)*1.2, 3);
+      r += (drift - 0.5) * lerp(0.12, 0.0, symmetry) * sc * 0.4 * sinp;
+
+      r = Math.max(3, r);
+
+      // Flatten bottom strongly — like a jellybean sitting on a surface
+      const flatBase = v > 0.80 ? lerp(1.0, 0.08, (v-0.80)/0.20) : 1.0;
+      const yRaw = r * cosp * 0.82; // flatter overall
+      const y = yRaw * flatBase;
+
+      verts.push(r*sinp*Math.cos(theta), y, r*sinp*Math.sin(theta));
+      uvs.push(u, v);
+    }
+  }
+  for(let ri=0; ri<rings; ri++){
+    for(let si=0; si<segs; si++){
+      const a=ri*(segs+1)+si, b=a+1, c=a+segs+1, d=c+1;
+      inds.push(a,c,b); inds.push(b,c,d);
+    }
+  }
+  const baseY = -sc * 0.82 * 0.97;
+  addBaseCap(verts, inds, uvs, segs, baseY, sc * 0.25);
+
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(inds); g.computeVertexNormals();
+  return g;
+}
+
+// ── DATA: Squircle rounded cube — like the pink/lavender square candy ──
+// Superellipse silhouette (squircle), rounded top, smooth overall form.
+// dig = how square vs round, rep = surface dimple pattern.
+function makeDataGeo(rep, vol, sil, dig, baseR){
+  const segs=128, rings=96;
+  const verts=[], inds=[], uvs=[];
+
+  const sc = baseR * lerp(0.85, 1.05, dig);
+  const squareness = lerp(2.0, 8.0, dig); // superellipse power: 2=circle, 8=square
+  const surfaceWave = lerp(0.0, 0.12, rep);
+
+  for(let ri=0; ri<=rings; ri++){
+    const v = ri/rings;
+    const phi = v * Math.PI;
+    const sinp = Math.sin(phi), cosp = Math.cos(phi);
+
+    for(let si=0; si<=segs; si++){
+      const u = si/segs;
+      const theta = u * Math.PI * 2;
+      const cost = Math.cos(theta), sint = Math.sin(theta);
+
+      // SUPERELLIPSE radius — squircle silhouette
+      // |x/a|^n + |z/b|^n = 1 solved for r
+      const cosP = Math.pow(Math.abs(cost), squareness);
+      const sinP = Math.pow(Math.abs(sint), squareness);
+      const sqR = 1.0 / Math.pow(cosP + sinP, 1.0/squareness);
+      let r = sc * sinp * sqR * (0.55 + 0.45*sinp);
+
+      // Subtle surface undulation — organic life in the squircle
+      const nx=sinp*cost, ny=cosp, nz=sinp*sint;
+      const surf = fbm(nx*2.1+0.3, ny*2.1-0.5, nz*2.1+1.1, 3);
+      r += (surf - 0.5) * surfaceWave * sc * sinp;
+
+      // vol = slight inflation/deflation
+      r *= lerp(0.92, 1.08, vol);
+      r = Math.max(3, r);
+
+      // Flat base
+      const flatBase = v > 0.82 ? lerp(1.0, 0.10, (v-0.82)/0.18) : 1.0;
+      const yRaw = r * cosp * lerp(0.75, 1.0, dig);
+      const y = yRaw * flatBase;
+
+      verts.push(r*sinp*cost, y, r*sinp*sint);
+      uvs.push(u, v);
+    }
+  }
+  for(let ri=0; ri<rings; ri++){
+    for(let si=0; si<segs; si++){
+      const a=ri*(segs+1)+si, b=a+1, c=a+segs+1, d=c+1;
+      inds.push(a,c,b); inds.push(b,c,d);
+    }
+  }
+  const baseY = -sc * lerp(0.75, 1.0, dig) * 0.97;
+  addBaseCap(verts, inds, uvs, segs, baseY, sc * 0.22);
+
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(inds); g.computeVertexNormals();
+  return g;
+}
+
+// Stand: simple smooth round plinth — thick enough to hold the figurine upright
+function makeStandGeo(dig, ignored){
+  const segs=64, rings=16;
+  const verts=[], inds=[], uvs=[];
+  const standR = lerp(28, 52, dig);
+  const standH = lerp(10, 18, dig);
+  for(let ri=0; ri<=rings; ri++){
+    const v = ri/rings;
+    const y = (v - 1.0) * standH; // sits below 0
+    for(let si=0; si<=segs; si++){
+      const u = si/segs;
+      const theta = u * Math.PI * 2;
+      const taper = lerp(1.0, 0.75, v); // slight outward base flare
+      const r = standR * taper * (0.8 + 0.2*Math.sin(v*Math.PI));
+      verts.push(r*Math.cos(theta), y, r*Math.sin(theta));
+      uvs.push(u, v);
+    }
+  }
+  for(let ri=0; ri<rings; ri++){
+    for(let si=0; si<segs; si++){
+      const a=ri*(segs+1)+si, b=a+1, c=a+segs+1, d=c+1;
+      inds.push(a,c,b); inds.push(b,c,d);
+    }
+  }
+  // Bottom cap
+  addBaseCap(verts, inds, uvs, segs, -standH, standR * 0.9);
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(inds); g.computeVertexNormals();
+  return g;
+}
+
+
+
+// ══════════════════════════════════════════════════
+// THREE.JS SETUP
+// ══════════════════════════════════════════════════
+let scene,camera,renderer,clock;
+let rotGroup,meshGroups={};
+let isDragging=false,prevMX=0,prevMY=0;
+let targetRotY=0.5,targetRotX=-0.15,curRotY=0.5,curRotX=-0.15;
+let targetZ=500,curZ=500;
+let autoSpin=true;
+
+function initThree(){
+  const wrap=document.getElementById('canvas-wrap');
+  const W=wrap.clientWidth,H=wrap.clientHeight;
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0xf0ece4); // warm cream — like the Blooming Moon tin
+  camera=new THREE.PerspectiveCamera(38,W/H,0.1,3000);
+  camera.position.set(0,20,targetZ);
+  renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(W,H);
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.1;
+  renderer.physicallyCorrectLights=true;
+  wrap.appendChild(renderer.domElement);
+
+  // Soft diffused studio lighting — makes jelly translucency glow
+  scene.add(new THREE.AmbientLight(0xfff8f0, 2.2));
+  // Key: overhead warm white
+  const key=new THREE.DirectionalLight(0xffffff,3.5);
+  key.position.set(80,400,200); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); key.shadow.camera.near=10; key.shadow.camera.far=1500;
+  scene.add(key);
+  // Fill: soft cool side fill
+  const fill=new THREE.DirectionalLight(0xdde8ff,2.0);
+  fill.position.set(-300,100,100); scene.add(fill);
+  // Back rim: warm peach — bounces through candy translucency
+  const rim=new THREE.DirectionalLight(0xffccaa,2.8);
+  rim.position.set(0,-100,-300); scene.add(rim);
+  // Under-glow: soft warm light beneath — illuminates the flat base
+  const under=new THREE.DirectionalLight(0xfff0dd,1.2);
+  under.position.set(0,-400,0); scene.add(under);
+  // Point lights — creates caustic-like hot spots on glossy surface
+  const pt1=new THREE.PointLight(0xffffff,4.0,600);
+  pt1.position.set(150,250,250); scene.add(pt1);
+  const pt2=new THREE.PointLight(0xffeedd,2.5,500);
+  pt2.position.set(-180,80,180); scene.add(pt2);
+
+  // Soft shadow plane
+  const plane=new THREE.Mesh(
+    new THREE.PlaneGeometry(2000,2000),
+    new THREE.ShadowMaterial({opacity:0.08})
+  );
+  plane.rotation.x=-Math.PI/2; plane.position.y=-220;
+  plane.receiveShadow=true; scene.add(plane);
+
+  rotGroup=new THREE.Group();
+  scene.add(rotGroup);
+  clock=new THREE.Clock();
+  build();
+  bindEvents();
+  animate();
+}
+
+// ══════════════════════════════════════════════════
+// BUILD FIGURINE
+// ══════════════════════════════════════════════════
+function getSliderVal(id){ return parseInt(document.getElementById(id).value)/100; }
+
+function build(){
+  // Sync params from sliders
+  P.core.emo =getSliderVal('sl-emo');
+  P.core.rhy =getSliderVal('sl-rhy');
+  P.core.con =getSliderVal('sl-con');
+  P.core.prs =getSliderVal('sl-prs');
+  P.ideal.cla=getSliderVal('sl-cla');
+  P.ideal.amb=getSliderVal('sl-amb');
+  P.ideal.dis=getSliderVal('sl-dis');
+  P.perceived.rol=getSliderVal('sl-rol');
+  P.perceived.ste=getSliderVal('sl-ste');
+  P.perceived.val=getSliderVal('sl-val');
+  P.data.rep=getSliderVal('sl-rep');
+  P.data.vol=getSliderVal('sl-vol');
+  P.data.sil=getSliderVal('sl-sil');
+  P.data.dig=getSliderVal('sl-dig');
+
+  Object.values(meshGroups).forEach(g=>rotGroup.remove(g));
+  meshGroups={};
+
+  const cp=P.core,ip=P.ideal,pp=P.perceived,dp=P.data;
+
+  // EXAGGERATED ranges — changes are dramatic now
+  const emo = lerp(35, 110, cp.emo);   // base volume
+  const rhy = lerp(0.05, 1.0, cp.rhy); // channel depth
+  const con = lerp(0.0, 0.85, cp.con); // void punching
+  const prs = lerp(0.3, 1.8, cp.prs);  // extrusion/height stretch
+
+  const cla = lerp(0.0, 1.0, ip.cla);
+  const amb = lerp(0.1, 1.0, ip.amb);
+  const dis = lerp(0.0, 1.0, ip.dis);  // was 0.2–1.0, now full range
+
+  const rol = lerp(15, 100, pp.rol);
+  const ste = lerp(0, 100, pp.ste);
+  const val = lerp(0, 1, pp.val);
+
+  const rep = lerp(0, 1, dp.rep);
+  const vol = lerp(0, 1, dp.vol);
+  const sil = lerp(0, 1, dp.sil);
+  const dig = lerp(0, 1, dp.dig);
+
+  // Perceived tower base size — scales off core
+  const percBaseR = (emo*(0.85+prs*0.2)) * lerp(1.2, 2.2, dis);
+  const percTowerH = percBaseR * lerp(1.4, 2.2, rol/100); // used for core/ideal Y offset
+
+  // ── JELLY CANDY MATERIAL FACTORY ──────────────────────────────────────────
+  // Blooming Moon aesthetic: thick translucent resin, glossy surface,
+  // inner dark core glowing through to bright saturated edges.
+  // Rendered as TWO layered meshes per form:
+  //   1) Inner mesh (slightly smaller) — dark saturated center color, high opacity
+  //   2) Outer mesh — bright midtone color, translucent, strong clearcoat gloss
+  // Together they mimic the SSS depth gradient of jelly candy.
+  function jellyMat(outerColor, innerColor, opacity=0.78){
+    return new THREE.MeshPhysicalMaterial({
+      color: outerColor,
+      roughness: 0.04,
+      metalness: 0.0,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.02,
+      transparent: true,
+      opacity: opacity,
+      side: THREE.FrontSide,
+      depthWrite: false
+    });
+  }
+  function jellyInnerMat(innerColor, opacity=0.65){
+    return new THREE.MeshPhysicalMaterial({
+      color: innerColor,
+      roughness: 0.08,
+      metalness: 0.0,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.1,
+      transparent: true,
+      opacity: opacity,
+      side: THREE.BackSide,
+      depthWrite: false
+    });
+  }
+  function addJellyMesh(geo, toneKey, grp, innerScale=0.88){
+    const outer = tc(toneKey);
+    const inner = tcInner(toneKey);
+    // Outer shell — bright candy color, highly glossy
+    const outerMesh = new THREE.Mesh(geo, jellyMat(outer, inner, 0.80));
+    outerMesh.castShadow = true; outerMesh.receiveShadow = true;
+    grp.add(outerMesh);
+    // Inner glow — same geo scaled down, dark saturated, backside render
+    // creates the impression of deep color pooling in thick areas
+    const innerMesh = new THREE.Mesh(geo, jellyInnerMat(inner, 0.72));
+    innerMesh.scale.setScalar(innerScale);
+    grp.add(innerMesh);
+    // Specular highlight layer — almost clear, extreme gloss for wet candy shine
+    const highlightMat = new THREE.MeshPhysicalMaterial({
+      color: outer.clone().lerp(new THREE.Color(1,1,1), 0.7),
+      roughness: 0.0, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.0,
+      transparent: true, opacity: 0.18,
+      side: THREE.FrontSide, depthWrite: false
+    });
+    const hlMesh = new THREE.Mesh(geo, highlightMat);
+    hlMesh.scale.setScalar(1.005);
+    grp.add(hlMesh);
+  }
+
+  // CORE — 4-petal lobed jelly blob (like pink/red lobed candy, top-left)
+  {
+    const g = makeCoreGeo(emo, rhy, con, prs);
+    const grp = new THREE.Group();
+    addJellyMesh(g, cp.tone, grp, 0.86);
+    grp.position.y = 0;
+    meshGroups.core = grp; rotGroup.add(grp);
+  }
+
+  // IDEAL — ribbed pumpkin sphere, now very translucent so bubble core shows through
+  {
+    const g = makeIdealGeo(cla, amb, dis, emo, prs);
+    const grp = new THREE.Group();
+    // Highly translucent outer shell — like frosted glass over the glowing core
+    const outerCol = tc(ip.tone);
+    const innerCol = tcInner(ip.tone);
+    const outerMesh = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({
+      color: outerCol,
+      roughness: 0.05, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.02,
+      transparent: true,
+      opacity: 0.26,           // very see-through — core glows through clearly
+      side: THREE.FrontSide, depthWrite: false
+    }));
+    outerMesh.castShadow = true;
+    grp.add(outerMesh);
+    // Subtle inner tint — just enough to show the layer exists
+    const innerMesh = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({
+      color: innerCol,
+      roughness: 0.1, metalness: 0.0,
+      transparent: true,
+      opacity: 0.14,
+      side: THREE.BackSide, depthWrite: false
+    }));
+    innerMesh.scale.setScalar(0.92);
+    grp.add(innerMesh);
+    // Thin rim highlight — catches light at the silhouette edge
+    const rimMesh = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({
+      color: outerCol.clone().lerp(new THREE.Color(1,1,1), 0.6),
+      roughness: 0.0, metalness: 0.0,
+      clearcoat: 1.0, clearcoatRoughness: 0.0,
+      transparent: true, opacity: 0.12,
+      side: THREE.FrontSide, depthWrite: false
+    }));
+    rimMesh.scale.setScalar(1.003);
+    grp.add(rimMesh);
+    grp.position.y = 0;
+    meshGroups.ideal = grp; rotGroup.add(grp);
+  }
+
+  // PERCEIVED — wavy amoeba blob (like yellow-green/lavender bottom candy)
+  {
+    const g = makePerceivedGeo(rol, ste, val, emo, prs, dis);
+    const grp = new THREE.Group();
+    addJellyMesh(g, pp.tone, grp, 0.90);
+    grp.position.y = 0;
+    meshGroups.perceived = grp; rotGroup.add(grp);
+  }
+
+  // DATA — squircle rounded form (like the pink/lavender square candy, left)
+  {
+    const dataBaseR = percBaseR * lerp(1.08, 1.45, dig);
+    const g = makeDataGeo(rep, vol, sil, dig, dataBaseR);
+    const grp = new THREE.Group();
+    addJellyMesh(g, dp.tone, grp, 0.88);
+
+    // Plinth — same jelly candy material, slightly desaturated
+    const sg = makeStandGeo(dig, 0);
+    const standY = -dataBaseR * lerp(0.55, 0.80, dig);
+    const standCol = tc(dp.tone).clone().lerp(new THREE.Color(0xffffff), 0.35);
+    const sm = jellyMat(standCol, tcInner(dp.tone), 0.70);
+    const smesh = new THREE.Mesh(sg, sm);
+    smesh.position.y = standY;
+    smesh.castShadow = true;
+    grp.add(smesh);
+
+    grp.position.y = 0;
+    meshGroups.data = grp; rotGroup.add(grp);
+  }
+
+  syncVis();
+  if(viewMode==='section') drawSection();
+}
+
+
+
+function syncVis(){
+  if(meshGroups.core)      meshGroups.core.visible      =layerVis.core;
+  if(meshGroups.ideal)     meshGroups.ideal.visible     =layerVis.ideal;
+  if(meshGroups.perceived) meshGroups.perceived.visible =layerVis.perceived;
+  if(meshGroups.data)      meshGroups.data.visible      =layerVis.data;
+}
+
+// ══════════════════════════════════════════════════
+// ANIMATE
+// ══════════════════════════════════════════════════
+function animate(){
+  requestAnimationFrame(animate);
+  if(viewMode!=='3d') return;
+  const t=clock.getElapsedTime();
+  if(autoSpin&&!isDragging) targetRotY+=0.003;
+  curRotY+=(targetRotY-curRotY)*0.055;
+  curRotX+=(targetRotX-curRotX)*0.055;
+  curZ+=(targetZ-curZ)*0.055;
+  rotGroup.rotation.y=curRotY;
+  rotGroup.rotation.x=curRotX;
+  camera.position.z=curZ;
+  // Breathing — botanical form breathes with gentle anisotropic pulse
+  if(meshGroups.core){
+    const bx=1+Math.sin(t*0.65)*0.016;
+    const by=1+Math.sin(t*0.82+0.9)*0.013;
+    const bz=1+Math.sin(t*0.70+1.7)*0.015;
+    meshGroups.core.scale.set(bx,by,bz);
+  }
+  if(meshGroups.ideal){ const b=1+Math.sin(t*0.6+1)*0.01; meshGroups.ideal.scale.setScalar(b); }
+  renderer.render(scene,camera);
+}
+
+// ══════════════════════════════════════════════════
+// CROSS SECTION VIEW
+// ══════════════════════════════════════════════════
+function drawSection(){
+  const wrap=document.getElementById('canvas-wrap');
+  const sc=document.getElementById('section-canvas');
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  sc.width=W; sc.height=H;
+  const ctx=sc.getContext('2d');
+  ctx.fillStyle='#0e0e12';
+  ctx.fillRect(0,0,W,H);
+
+  const cx=W*0.5, cy=H*0.56;
+
+  const emo=lerp(35,110,P.core.emo);
+  const prs=lerp(0.3,1.8,P.core.prs);
+  const dis=lerp(0.0,1.0,P.ideal.dis);
+  const amb=lerp(0.1,1.0,P.ideal.amb);
+  const rol=lerp(15,100,P.perceived.rol);
+  const rhy=lerp(0.05,1.0,P.core.rhy);
+  const con=lerp(0.0,0.85,P.core.con);
+  const scale=H*0.00155;
+
+  // CORE equatorial cross-section — metaball cluster profile
+  // Sub-form centers distributed around the equatorial plane
+  const numSubsCS = Math.round(lerp(5,18,rhy));
+  const goldenAngleCS = Math.PI*(3-Math.sqrt(5));
+  const subCentersCS = [];
+  for(let i=0;i<numSubsCS;i++){
+    const angle = goldenAngleCS*i;
+    const orbitR = lerp(0.08,0.55,con);
+    const sr = lerp(0.45,0.75,0.5+0.5*Math.sin(i*2.399));
+    // Equatorial slice: only x-z plane matters (y≈0)
+    subCentersCS.push({x:Math.cos(angle)*orbitR, z:Math.sin(angle)*orbitR, r:sr});
+  }
+  subCentersCS.push({x:0, z:0, r:lerp(0.6,0.9,1.0-con*0.5)});
+
+  function sampleCore(theta){
+    const cosT=Math.cos(theta), sinT=Math.sin(theta);
+    const isoT = lerp(0.38,0.55,1.0-rhy*0.4);
+    // March along direction (cosT, sinT) to find metaball isosurface
+    let rLo=0.01, rHi=1.8;
+    function field2D(rr){
+      let f=0;
+      for(const sc of subCentersCS){
+        const dx=cosT*rr-sc.x, dz=sinT*rr-sc.z;
+        const d2=dx*dx+dz*dz;
+        const cut=sc.r*sc.r;
+        if(d2<cut*4){const t=d2/(cut*4);const k=Math.max(0,1-t);f+=k*k*k*sc.r;}
+      }
+      return f;
+    }
+    if(field2D(rHi)>=isoT){ /* stays clamped */ }
+    else { for(let it=0;it<14;it++){const m=(rLo+rHi)*0.5;field2D(m)>isoT?rLo=m:rHi=m;} }
+    const r=(rLo+rHi)*0.5;
+    const baseScale=emo*(0.85+prs*0.15);
+    return Math.max(3,r*baseScale*scale);
+  }
+
+  // IDEAL smooth membrane (radial)
+  function sampleIdeal(theta){
+    const cosT=Math.cos(theta), sinT=Math.sin(theta);
+    const baseR=emo*(0.85+prs*0.25)*(1.15+dis*1.2);
+    let r=baseR*(0.6+0.4)*(0.9+amb*0.3);
+    r+=amb*1.6*(0.5*(1+Math.sin(theta+0.3)))*baseR*0.20;
+    r-=amb*0.7*Math.exp(-5*(cosT+0.3)*(cosT+0.3))*baseR*0.25;
+    r+=(fbm(cosT*1.5,0,sinT*1.5,3)-0.5)*(1-lerp(0,1,P.ideal.cla))*baseR*0.5;
+    return Math.max(3,r*scale);
+  }
+
+  // PERCEIVED & DATA — vertical stalagmite silhouette
+  // Draw as a tower outline (y profile), not radial
+  const percBaseR=emo*(0.85+prs*0.2)*lerp(1.2,2.2,dis);
+  const percTowerH=percBaseR*lerp(1.8,3.2,rol/100)*scale;
+  const dataBaseR=percBaseR*lerp(1.4,1.9,P.data.dig);
+  const dataTowerH=dataBaseR*lerp(1.0,2.2,P.data.dig)*scale;
+
+  function percWidthAtV(v){ // v 0=bottom 1=top
+    const coneR=percBaseR*(1-v*0.82)*(0.55+0.45*Math.sin(v*Math.PI));
+    const tierBulge=Math.max(0,Math.sin(v*lerp(3,8,rol/100)*Math.PI*2))*lerp(0.15,0.55,rol/100);
+    return Math.max(1,coneR*(1+tierBulge)*scale);
+  }
+  function dataWidthAtV(v){
+    const coneR=dataBaseR*lerp(1.4,1.9,P.data.dig)*(1-v*0.78)*(0.5+0.5*Math.sin(v*Math.PI));
+    const grain=fbm(v*3+0.5,0,v*2+1.3,4);
+    return Math.max(1,coneR*(1+(grain-0.5)*0.2)*scale);
+  }
+
+  // Draw a vertical tower silhouette (left+right outline)
+  function drawTower(widthFn, towerHpx, color, fillAlpha, strokeW, dash=[]){
+    const steps=120;
+    const botY=cy, topY=cy-towerHpx;
+    ctx.save();
+    // Fill
+    ctx.globalAlpha=fillAlpha;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const v=i/steps;
+      const y=botY+(topY-botY)*v;
+      const w=widthFn(v);
+      if(i===0) ctx.moveTo(cx+w, y); else ctx.lineTo(cx+w, y);
+    }
+    for(let i=steps;i>=0;i--){
+      const v=i/steps;
+      const y=botY+(topY-botY)*v;
+      const w=widthFn(v);
+      ctx.lineTo(cx-w, y);
+    }
+    ctx.closePath(); ctx.fill();
+    // Stroke
+    ctx.globalAlpha=0.9;
+    ctx.strokeStyle=color; ctx.lineWidth=strokeW; ctx.setLineDash(dash);
+    ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const v=i/steps;
+      const y=botY+(topY-botY)*v;
+      const w=widthFn(v);
+      if(i===0) ctx.moveTo(cx+w, y); else ctx.lineTo(cx+w, y);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const v=i/steps;
+      const y=botY+(topY-botY)*v;
+      const w=widthFn(v);
+      if(i===0) ctx.moveTo(cx-w, y); else ctx.lineTo(cx-w, y);
+    }
+    ctx.stroke();
+    // Tier lines inside tower (horizontal marks)
+    ctx.setLineDash([]); ctx.lineWidth=0.5; ctx.globalAlpha=0.35;
+    const tiers=Math.round(lerp(3,8,rol/100));
+    for(let ti=0;ti<=tiers;ti++){
+      const v=ti/tiers;
+      const y=botY+(topY-botY)*v;
+      const w=widthFn(v)*0.95;
+      ctx.beginPath(); ctx.moveTo(cx-w,y); ctx.lineTo(cx+w,y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Hatch for tower
+  function drawTowerHatch(widthFn, towerHpx, color, spacing, angle){
+    const botY=cy, topY=cy-towerHpx;
+    ctx.save();
+    ctx.strokeStyle=color; ctx.lineWidth=0.4; ctx.globalAlpha=0.35;
+    ctx.beginPath();
+    for(let i=0;i<=120;i++){
+      const v=i/120; const y=botY+(topY-botY)*v; const w=widthFn(v);
+      if(i===0) ctx.moveTo(cx+w,y); else ctx.lineTo(cx+w,y);
+    }
+    for(let i=120;i>=0;i--){
+      const v=i/120; const y=botY+(topY-botY)*v; const w=widthFn(v);
+      ctx.lineTo(cx-w,y);
+    }
+    ctx.closePath(); ctx.clip();
+    const maxR=H;
+    for(let d=-maxR;d<maxR;d+=spacing){
+      const cos=Math.cos(angle), sin=Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(cx+d*Math.cos(angle+Math.PI/2)-maxR*cos, botY+d*Math.sin(angle+Math.PI/2)-maxR*sin);
+      ctx.lineTo(cx+d*Math.cos(angle+Math.PI/2)+maxR*cos, botY+d*Math.sin(angle+Math.PI/2)+maxR*sin);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Radial layer draw helpers (core + ideal)
+  const N=280;
+  function drawRadialFill(fn,color,alpha){
+    ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=color; ctx.beginPath();
+    for(let i=0;i<=N;i++){const t=(i/N)*Math.PI*2,r=fn(t);const x=cx+Math.cos(t)*r,y=cy-percTowerH*0.42+Math.sin(t)*r*1.35;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function drawRadialOutline(fn,color,lw,dash=[]){
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.setLineDash(dash); ctx.beginPath();
+    for(let i=0;i<=N;i++){const t=(i/N)*Math.PI*2,r=fn(t);const x=cx+Math.cos(t)*r,y=cy-percTowerH*0.42+Math.sin(t)*r*1.35;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath(); ctx.stroke(); ctx.restore();
+  }
+  function drawRadialHatch(fn,color,spacing,angle){
+    const coreY=cy-percTowerH*0.42;
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=0.4; ctx.globalAlpha=0.38;
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){const t=(i/N)*Math.PI*2,r=fn(t);const x=cx+Math.cos(t)*r,y=coreY+Math.sin(t)*r*1.35;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath(); ctx.clip();
+    const maxR=250;
+    for(let d=-maxR*2;d<maxR*2;d+=spacing){
+      const cos=Math.cos(angle),sin=Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(cx+d*Math.cos(angle+Math.PI/2)-maxR*cos,coreY+d*Math.sin(angle+Math.PI/2)-maxR*sin);
+      ctx.lineTo(cx+d*Math.cos(angle+Math.PI/2)+maxR*cos,coreY+d*Math.sin(angle+Math.PI/2)+maxR*sin);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── DRAW ORDER ──────────────────────────────────
+  // Axis line
+  ctx.save(); ctx.strokeStyle='#1a1a2a'; ctx.lineWidth=1; ctx.setLineDash([4,6]);
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,H-20); ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle='#2a2a2a'; ctx.font='700 8px monospace';
+  ctx.fillText('CROSS SECTION',20,20);
+  ctx.fillStyle='#1a1a1a'; ctx.font='7px monospace';
+  ctx.fillText('left: equatorial organic profile   right: tower silhouette (perceived/data)',20,32);
+
+  // DATA tower (widest, furthest back)
+  if(layerVis.data){
+    drawTowerHatch(dataWidthAtV, dataTowerH, toHex(P.data.tone), 18, Math.PI/5);
+    drawTower(dataWidthAtV, dataTowerH, toHex(P.data.tone), 0.10, 1.0, [3,5]);
+  }
+  // PERCEIVED tower
+  if(layerVis.perceived){
+    drawTowerHatch(percWidthAtV, percTowerH, toHex(P.perceived.tone), 14, Math.PI/6);
+    drawTower(percWidthAtV, percTowerH, toHex(P.perceived.tone), 0.14, 1.8, []);
+  }
+  // IDEAL blob (at top of tower)
+  if(layerVis.ideal){
+    drawRadialHatch(sampleIdeal, toHex(P.ideal.tone), 16, -Math.PI/5);
+    drawRadialFill(sampleIdeal, toHex(P.ideal.tone), 0.22);
+    drawRadialOutline(sampleIdeal, toHex(P.ideal.tone), 1.6, []);
+  }
+  // CORE blob (topmost, smallest)
+  if(layerVis.core){
+    drawRadialHatch(sampleCore, toHex(P.core.tone), 9, Math.PI/4);
+    drawRadialFill(sampleCore, toHex(P.core.tone), 0.38);
+    drawRadialOutline(sampleCore, toHex(P.core.tone), 2.2, []);
+  }
+
+  // Labels
+  const coreY=cy-percTowerH*0.42;
+  function radialLabel(fn, angle, text, color){
+    const r=fn(angle);
+    const ix=cx+Math.cos(angle)*r, iy=coreY+Math.sin(angle)*r*1.35;
+    const ex=ix+Math.cos(angle)*38, ey=iy+Math.sin(angle)*22;
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=0.7; ctx.globalAlpha=0.75;
+    ctx.beginPath(); ctx.moveTo(ix,iy); ctx.lineTo(ex,ey); ctx.stroke();
+    ctx.fillStyle=color; ctx.font='700 9px monospace'; ctx.globalAlpha=1;
+    ctx.textAlign=Math.cos(angle)>0?'left':'right';
+    ctx.fillText(text,ex+(Math.cos(angle)>0?5:-5),ey+4);
+    ctx.restore();
+  }
+  if(layerVis.core)      radialLabel(sampleCore,  -0.7, 'CORE',  toHex(P.core.tone));
+  if(layerVis.ideal)     radialLabel(sampleIdeal, -1.2, 'IDEAL', toHex(P.ideal.tone));
+
+  // Tower labels (right side)
+  if(layerVis.perceived){
+    const pw=percWidthAtV(0.5), py=cy-percTowerH*0.5;
+    ctx.save(); ctx.strokeStyle=toHex(P.perceived.tone); ctx.lineWidth=0.7; ctx.globalAlpha=0.75;
+    ctx.beginPath(); ctx.moveTo(cx+pw,py); ctx.lineTo(cx+pw+45,py-12); ctx.stroke();
+    ctx.fillStyle=toHex(P.perceived.tone); ctx.font='700 9px monospace'; ctx.globalAlpha=1; ctx.textAlign='left';
+    ctx.fillText('PERCEIVED',cx+pw+48,py-9);
+    ctx.restore();
+  }
+  if(layerVis.data){
+    const dw=dataWidthAtV(0.4), dy=cy-dataTowerH*0.35;
+    ctx.save(); ctx.strokeStyle=toHex(P.data.tone); ctx.lineWidth=0.7; ctx.globalAlpha=0.75;
+    ctx.beginPath(); ctx.moveTo(cx+dw,dy); ctx.lineTo(cx+dw+45,dy+18); ctx.stroke();
+    ctx.fillStyle=toHex(P.data.tone); ctx.font='700 9px monospace'; ctx.globalAlpha=1; ctx.textAlign='left';
+    ctx.fillText('DATA',cx+dw+48,dy+21);
+    ctx.restore();
+  }
+
+  // Scale bar
+  ctx.save(); ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1;
+  const sbX=W-90, sbY=H-28, sbL=55;
+  ctx.beginPath(); ctx.moveTo(sbX,sbY); ctx.lineTo(sbX+sbL,sbY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sbX,sbY-4); ctx.lineTo(sbX,sbY+4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sbX+sbL,sbY-4); ctx.lineTo(sbX+sbL,sbY+4); ctx.stroke();
+  ctx.fillStyle='#2a2a2a'; ctx.font='7px monospace'; ctx.textAlign='center';
+  ctx.fillText('50mm',sbX+sbL/2,sbY-8);
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════
+function bindEvents(){
+  const wrap=document.getElementById('canvas-wrap');
+
+  wrap.addEventListener('mousedown',e=>{
+    if(viewMode!=='3d')return;
+    isDragging=true; prevMX=e.clientX; prevMY=e.clientY; autoSpin=false;
+    wrap.style.cursor='grabbing';
+  });
+  window.addEventListener('mouseup',()=>{ isDragging=false; wrap.style.cursor='crosshair'; });
+  window.addEventListener('mousemove',e=>{
+    if(!isDragging||viewMode!=='3d')return;
+    targetRotY+=(e.clientX-prevMX)*0.008;
+    targetRotX+=(e.clientY-prevMY)*0.008;
+    targetRotX=Math.max(-1.4,Math.min(1.4,targetRotX));
+    prevMX=e.clientX; prevMY=e.clientY;
+  });
+
+  wrap.addEventListener('wheel',e=>{
+    if(viewMode!=='3d')return;
+    e.preventDefault();
+    targetZ=Math.max(100,Math.min(1000,targetZ+e.deltaY*0.5));
+  },{passive:false});
+
+  let lastClick=0;
+  wrap.addEventListener('click',()=>{
+    if(viewMode!=='3d')return;
+    const now=Date.now();
+    if(now-lastClick<280){ const s=stages[stageIdx]; layerVis[s]=!layerVis[s]; syncVis(); }
+    lastClick=now;
+  });
+
+  // Touch
+  let ltd=0;
+  wrap.addEventListener('touchstart',e=>{
+    if(e.touches.length===2) ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    else if(viewMode==='3d'){ isDragging=true; prevMX=e.touches[0].clientX; prevMY=e.touches[0].clientY; autoSpin=false; }
+  },{passive:true});
+  wrap.addEventListener('touchmove',e=>{
+    if(e.touches.length===2&&viewMode==='3d'){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      targetZ=Math.max(100,Math.min(1000,targetZ-(d-ltd)*2)); ltd=d;
+    } else if(isDragging&&viewMode==='3d'){
+      targetRotY+=(e.touches[0].clientX-prevMX)*0.008;
+      targetRotX+=(e.touches[0].clientY-prevMY)*0.008;
+      prevMX=e.touches[0].clientX; prevMY=e.touches[0].clientY;
+    }
+  },{passive:true});
+  wrap.addEventListener('touchend',()=>isDragging=false);
+
+  window.addEventListener('keydown',e=>{
+    if(e.key==='r'||e.key==='R'){ targetRotY=0.5; targetRotX=-0.15; targetZ=500; autoSpin=true; }
+    if(e.key==='1'){layerVis.core=!layerVis.core;syncVis();}
+    if(e.key==='2'){layerVis.ideal=!layerVis.ideal;syncVis();}
+    if(e.key==='3'){layerVis.perceived=!layerVis.perceived;syncVis();}
+    if(e.key==='4'){layerVis.data=!layerVis.data;syncVis();}
+    if(e.key==='s'||e.key==='S') setView(viewMode==='3d'?'section':'3d');
+  });
+
+  window.addEventListener('resize',()=>{
+    const W=wrap.clientWidth,H=wrap.clientHeight;
+    camera.aspect=W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W,H);
+    if(viewMode==='section') drawSection();
+  });
+}
+
+// ══════════════════════════════════════════════════
+// CHAIN CONNECTOR GEOMETRY
+// ══════════════════════════════════════════════════
+// Standard connector spec — same across ALL years so they always fit:
+//   PLUG  (bottom): cylinder Ø8mm, 10mm tall, with two locking fins
+//   SOCKET (top):   matching recess, 8.4mm bore (0.2mm clearance each side)
+//   Both chamfered for easy insertion
+
+const CHAIN = {
+  plugR:   4.0,   // plug outer radius mm
+  socketR: 4.2,   // socket bore radius (slight clearance)
+  height:  10,    // connector shaft height mm
+  finH:    3.5,   // locking fin height
+  finW:    1.2,   // fin width
+  chamfer: 0.8,   // chamfer radius
+};
+
+// Three.js connector meshes — added to each figurine group
+function makePlugGeo(){
+  // Cylinder with two fins
+  const g = new THREE.CylinderGeometry(CHAIN.plugR, CHAIN.plugR, CHAIN.height, 32, 1);
+  return g;
+}
+function makeSocketGeo(){
+  // Outer ring (represents the socket opening)
+  const g = new THREE.CylinderGeometry(CHAIN.socketR+3, CHAIN.socketR+3, 4, 32, 1);
+  return g;
+}
+function makeFinGeo(){
+  const g = new THREE.BoxGeometry(CHAIN.finW*2, CHAIN.finH, CHAIN.plugR*2.2);
+  return g;
+}
+
+function addChainConnectors(group, topY, bottomY, color){
+  const mat = new THREE.MeshPhysicalMaterial({
+    color, roughness:0.15, metalness:0.7,
+    clearcoat:1.0, clearcoatRoughness:0.0
+  });
+  const ringMat = new THREE.MeshPhysicalMaterial({
+    color:0xdddddd, roughness:0.1, metalness:0.8,
+    clearcoat:1.0, clearcoatRoughness:0.0
+  });
+
+  // PLUG at bottom
+  const plug = new THREE.Mesh(makePlugGeo(), mat);
+  plug.position.y = bottomY - CHAIN.height*0.5;
+  group.add(plug);
+  // Two locking fins on plug
+  for(let f=0;f<2;f++){
+    const fin = new THREE.Mesh(makeFinGeo(), mat);
+    fin.rotation.y = f * Math.PI*0.5;
+    fin.position.y = bottomY - CHAIN.height*0.5;
+    group.add(fin);
+  }
+  // Plug collar
+  const collar = new THREE.Mesh(
+    new THREE.CylinderGeometry(CHAIN.plugR+2.5, CHAIN.plugR+2.5, 3, 32), mat
+  );
+  collar.position.y = bottomY;
+  group.add(collar);
+
+  // SOCKET at top
+  const socketRim = new THREE.Mesh(
+    new THREE.CylinderGeometry(CHAIN.socketR+4, CHAIN.socketR+4, 5, 32), ringMat
+  );
+  socketRim.position.y = topY;
+  group.add(socketRim);
+  // Socket bore visual (dark recess)
+  const bore = new THREE.Mesh(
+    new THREE.CylinderGeometry(CHAIN.socketR, CHAIN.socketR, 6, 32),
+    new THREE.MeshStandardMaterial({color:0x111111})
+  );
+  bore.position.y = topY + 1;
+  group.add(bore);
+}
+
+// ══════════════════════════════════════════════════
+// CHAIN PREVIEW — show 3 linked figurines
+// ══════════════════════════════════════════════════
+let chainScene, chainCamera, chainRenderer, chainGroup;
+let chainAnimId = null;
+
+function openChainPreview(){
+  document.getElementById('chain-modal').classList.add('open');
+  if(!chainRenderer) initChainScene();
+  else renderChainPreview();
+}
+function closeChainPreview(){
+  document.getElementById('chain-modal').classList.remove('open');
+}
+
+function initChainScene(){
+  const wrap = document.getElementById('chain-canvas-wrap');
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+
+  chainScene = new THREE.Scene();
+  chainScene.background = new THREE.Color(0xf0ece4);
+
+  chainCamera = new THREE.PerspectiveCamera(42, W/H, 0.1, 3000);
+  chainCamera.position.set(0, 0, 1400);
+
+  chainRenderer = new THREE.WebGLRenderer({antialias:true});
+  chainRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  chainRenderer.setSize(W,H);
+  chainRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  chainRenderer.toneMappingExposure = 1.3;
+  wrap.appendChild(chainRenderer.domElement);
+
+  chainScene.add(new THREE.AmbientLight(0xfff8f0, 2.5));
+  const kl = new THREE.DirectionalLight(0xffffff, 3.5);
+  kl.position.set(80,400,200); chainScene.add(kl);
+  const fl = new THREE.DirectionalLight(0xdde8ff, 2.0);
+  fl.position.set(-300,100,100); chainScene.add(fl);
+  const rl = new THREE.DirectionalLight(0xffccaa, 2.5);
+  rl.position.set(0,-100,-300); chainScene.add(rl);
+
+  // Chain canvas interaction
+  let cDrag=false, cPMX=0, cPMY=0, cRotY=0, cRotX=0, cTgtY=0.3, cTgtX=-0.1, cZoom=1400, cTgtZ=1400;
+  wrap.addEventListener('mousedown',e=>{cDrag=true;cPMX=e.clientX;cPMY=e.clientY;wrap.style.cursor='grabbing';});
+  wrap.addEventListener('mouseup',()=>{cDrag=false;wrap.style.cursor='grab';});
+  wrap.addEventListener('mousemove',e=>{
+    if(!cDrag)return;
+    cTgtY+=(e.clientX-cPMX)*0.009; cTgtX+=(e.clientY-cPMY)*0.009;
+    cTgtX=Math.max(-1.2,Math.min(1.2,cTgtX));
+    cPMX=e.clientX;cPMY=e.clientY;
+  });
+  wrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    cTgtZ=Math.max(300,Math.min(2800,cTgtZ+e.deltaY*0.8));
+  },{passive:false});
+
+  // Override animateChain to include smooth orbit
+  if(chainAnimId) cancelAnimationFrame(chainAnimId);
+  const chainAnimate=()=>{
+    chainAnimId=requestAnimationFrame(chainAnimate);
+    if(!cDrag) cTgtY+=0.003;
+    cRotY+=(cTgtY-cRotY)*0.06; cRotX+=(cTgtX-cRotX)*0.06;
+    cZoom+=(cTgtZ-cZoom)*0.06;
+    if(chainGroup){ chainGroup.rotation.y=cRotY; chainGroup.rotation.x=cRotX; }
+    chainCamera.position.set(0,0,cZoom);
+    chainRenderer.render(chainScene,chainCamera);
+  };
+  chainAnimate();
+
+  window.addEventListener('resize',()=>{
+    if(!document.getElementById('chain-modal').classList.contains('open')) return;
+    const W2=wrap.clientWidth,H2=wrap.clientHeight;
+    chainCamera.aspect=W2/H2; chainCamera.updateProjectionMatrix();
+    chainRenderer.setSize(W2,H2);
+  });
+
+  renderChainPreview();
+}
+
+function renderChainPreview(){
+  if(chainGroup){ chainScene.remove(chainGroup); }
+  chainGroup = new THREE.Group();
+  chainScene.add(chainGroup);
+
+  const cp=P.core, ip=P.ideal, pp=P.perceived, dp=P.data;
+
+  // ── Deterministic drift for past/future years ──
+  function driftVal(base, seed, yearDelta, amount){
+    const drift = (noise3(base*3.1+seed, yearDelta*0.7, seed*1.3) - 0.5) * 2;
+    return Math.max(0, Math.min(1, base + drift * amount * yearDelta));
+  }
+
+  const YEARS       = [-2, -1, 0, 1, 2];
+  const YEAR_LABELS = ['N−2', 'N−1', 'N (NOW)', 'N+1', 'N+2'];
+  const YEAR_ALPHAS = [0.18, 0.45, 1.0, 0.38, 0.16];
+
+  const yearParams = YEARS.map((delta) => {
+    if(delta === 0) return { cp, ip, pp, dp };
+    const d = Math.abs(delta), s = Math.sign(delta);
+    return {
+      cp:{ emo:driftVal(cp.emo,1.1,d*s,0.18), rhy:driftVal(cp.rhy,2.3,d*s,0.22),
+           con:driftVal(cp.con,3.7,d*s,0.20), prs:driftVal(cp.prs,5.1,d*s,0.15), tone:cp.tone },
+      ip:{ cla:driftVal(ip.cla,6.2,d*s,0.18), amb:driftVal(ip.amb,7.8,d*s,0.20),
+           dis:driftVal(ip.dis,8.4,d*s,0.14), tone:ip.tone },
+      pp:{ rol:driftVal(pp.rol,9.9,d*s,0.16)*100, ste:driftVal(pp.ste,10.5,d*s,0.18)*100,
+           val:driftVal(pp.val,11.2,d*s,0.12), tone:pp.tone },
+      dp:{ dig:driftVal(dp.dig,12.7,d*s,0.14), rep:driftVal(dp.rep,13.3,d*s,0.16),
+           vol:driftVal(dp.vol,14.1,d*s,0.15), sil:driftVal(dp.sil,14.8,d*s,0.12), tone:dp.tone }
+    };
+  });
+
+  // ── Reference sizing from current year ──
+  const EMO0 = lerp(35,110, cp.emo);
+  const PRS0 = lerp(0.3,1.8, cp.prs);
+  const DIS0 = lerp(0.0,1.0, ip.dis);
+  const percBaseR0 = (EMO0*(0.85+PRS0*0.2)) * lerp(1.2,2.2,DIS0);
+  const figH    = percBaseR0 * 2.4;
+  const spacing = figH * 1.12;
+
+  YEARS.forEach((yearDelta, yi) => {
+    const yp     = yearParams[yi];
+    const alpha  = YEAR_ALPHAS[yi];
+    const isCur  = yearDelta === 0;
+    const yOff   = (yi - 2) * spacing;
+
+    const cp_ = yp.cp, ip_ = yp.ip, pp_ = yp.pp, dp_ = yp.dp;
+
+    // Resolve numeric params
+    const emo  = lerp(35,110,  cp_.emo);
+    const prs  = lerp(0.3,1.8, cp_.prs);
+    const rhy  = lerp(0.05,1.0,cp_.rhy);
+    const con  = lerp(0.0,0.85,cp_.con);
+    const cla  = lerp(0.0,1.0, ip_.cla);
+    const amb  = lerp(0.1,1.0, ip_.amb);
+    const dis  = lerp(0.0,1.0, ip_.dis);
+    const rol  = typeof pp_.rol==='number' ? pp_.rol : lerp(15,100,pp_.rol);
+    const ste  = typeof pp_.ste==='number' ? pp_.ste : lerp(0,100,pp_.ste);
+    const val  = lerp(0,1, pp_.val);
+    const dig  = lerp(0,1, dp_.dig);
+    const rep  = lerp(0,1, dp_.rep);
+    const vol  = lerp(0,1, dp_.vol);
+    const sil  = lerp(0,1, dp_.sil);
+    const percBaseR = (emo*(0.85+prs*0.2)) * lerp(1.2,2.2,dis);
+
+    const figGrp = new THREE.Group();
+    figGrp.position.y = yOff;
+
+    // ── Helper: create translucent jelly mesh for chain preview ──
+    // Each layer: outer front + inner backside, all deeply transparent
+    // so all 4 layers nest and glow through each other
+    function chainJellyMesh(geo, toneKey, baseOpacity){
+      const grp = new THREE.Group();
+      const outer = tc(toneKey);
+      const inner = tcInner(toneKey);
+      const opScale = isCur ? 1.0 : alpha;
+
+      // Outer face — glossy translucent surface
+      grp.add(new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({
+        color: outer,
+        roughness: 0.04, metalness: 0.0,
+        clearcoat: 1.0, clearcoatRoughness: 0.02,
+        transparent: true,
+        opacity: baseOpacity * opScale,
+        side: THREE.FrontSide, depthWrite: false
+      })));
+
+      // Inner face backside — dark colour pooling gives depth gradient
+      const innerMesh = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({
+        color: inner,
+        roughness: 0.10, metalness: 0.0,
+        transparent: true,
+        opacity: baseOpacity * 0.55 * opScale,
+        side: THREE.BackSide, depthWrite: false
+      }));
+      innerMesh.scale.setScalar(0.96);
+      grp.add(innerMesh);
+
+      return grp;
+    }
+
+    // ── LAYER 1: Core bubble cluster — innermost, vivid ──
+    {
+      const g = makeCoreGeo(emo, rhy, con, prs);
+      figGrp.add(chainJellyMesh(g, cp_.tone, 0.72));
+    }
+
+    // ── LAYER 2: Ideal ribbed shell — very translucent, shows core through ──
+    {
+      const g = makeIdealGeo(cla, amb, dis, emo, prs);
+      figGrp.add(chainJellyMesh(g, ip_.tone, 0.22));
+    }
+
+    // ── LAYER 3: Perceived amoeba shell ──
+    {
+      const g = makePerceivedGeo(rol, ste, val, emo, prs, dis);
+      figGrp.add(chainJellyMesh(g, pp_.tone, 0.30));
+    }
+
+    // ── LAYER 4: Data squircle — outermost, lightest opacity ──
+    {
+      const dataBaseR = percBaseR * lerp(1.08,1.45,dig);
+      const g = makeDataGeo(rep, vol, sil, dig, dataBaseR);
+      figGrp.add(chainJellyMesh(g, dp_.tone, 0.22));
+    }
+
+    // ── Chain connectors ──
+    const topY = percBaseR * 0.52;
+    const botY = -percBaseR * 0.60;
+    addChainConnectors(figGrp, topY, botY, isCur ? 0xe8c870 : 0x888899);
+
+    chainGroup.add(figGrp);
+
+    // ── Spine connector to next figure ──
+    if(yi < YEARS.length - 1){
+      const nxt = yearParams[yi+1];
+      const nEmo = lerp(35,110,nxt.cp.emo), nPrs = lerp(0.3,1.8,nxt.cp.prs), nDis = lerp(0,1,nxt.ip.dis);
+      const nBaseR = (nEmo*(0.85+nPrs*0.2)) * lerp(1.2,2.2,nDis);
+      const midAlpha = (YEAR_ALPHAS[yi] + YEAR_ALPHAS[yi+1]) * 0.45;
+
+      // Tube spine: two vertical cylinders meeting between figures
+      const tubeH = spacing - topY + botY;
+      const tubeGeo = new THREE.CylinderGeometry(2.5, 2.5, tubeH, 16);
+      const tubeMat = new THREE.MeshPhysicalMaterial({
+        color: isCur ? 0xe8c870 : 0x9999bb,
+        roughness:0.1, metalness:0.4,
+        transparent:true, opacity: midAlpha * 0.8
+      });
+      const tube = new THREE.Mesh(tubeGeo, tubeMat);
+      tube.position.set(0, yOff + topY + tubeH*0.5, 0);
+      chainGroup.add(tube);
+    }
+
+    // ── Year label (canvas sprite) ──
+    const lc = document.createElement('canvas');
+    lc.width=360; lc.height=64;
+    const lx = lc.getContext('2d');
+    lx.clearRect(0,0,360,64);
+    lx.fillStyle = isCur ? '#F5D000' : (yearDelta<0 ? '#aaaacc' : '#88aa88');
+    lx.font = `700 ${isCur?20:14}px monospace`;
+    lx.textAlign = 'center';
+    lx.fillText(`YEAR ${YEAR_LABELS[yi]}`, 180, 26);
+    if(isCur){
+      lx.font = '400 10px monospace';
+      lx.fillStyle = '#888';
+      lx.fillText(`bubbles ${Math.round(lerp(3,25,cp_.rhy))} · spread ${Math.round(cp_.con*100)}%`, 180, 46);
+    }
+    const ltex = new THREE.CanvasTexture(lc);
+    const lmesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(150, 26),
+      new THREE.MeshBasicMaterial({map:ltex, transparent:true, depthWrite:false})
+    );
+    lmesh.position.set(percBaseR*2.2, yOff + figH*0.05, 0);
+    lmesh.rotation.y = -0.05;
+    chainGroup.add(lmesh);
+  });
+
+  // ── Identity growth arc — golden curve showing size of self over time ──
+  const arcPts = YEARS.map((_, i) => {
+    const yp_ = yearParams[i];
+    const e_ = lerp(35,110,yp_.cp.emo), p_ = lerp(0.3,1.8,yp_.cp.prs), d_ = lerp(0,1,yp_.ip.dis);
+    const bR = (e_*(0.85+p_*0.2)) * lerp(1.2,2.2,d_);
+    return new THREE.Vector3(bR*2.0, (i-2)*spacing, 0);
+  });
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+  chainGroup.add(new THREE.Line(arcGeo, new THREE.LineBasicMaterial({
+    color:0xF5D000, transparent:true, opacity:0.30
+  })));
+}
+
+// ══════════════════════════════════════════════════
+// DOWNLOADS
+// ══════════════════════════════════════════════════
+function downloadJPEG(){
+  renderer.render(scene,camera);
+  const a=document.createElement('a');
+  a.href=renderer.domElement.toDataURL('image/jpeg',0.95);
+  a.download=`figuring_3d_${Date.now()}.jpg`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function downloadSectionSVG(){
+  const wrap=document.getElementById('canvas-wrap');
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  const cx=W/2, cy=H/2;
+
+  const emo=lerp(60,130,P.core.emo);
+  const prs=lerp(0.5,1.4,P.core.prs);
+  const dis=lerp(0.2,1.0,P.ideal.dis);
+  const amb=lerp(0.3,1.0,P.ideal.amb);
+  const rol=lerp(20,80,P.perceived.rol);
+  const rhy=lerp(0.1,0.9,P.core.rhy);
+  const con=lerp(0.0,0.7,P.core.con);
+  const scale=H*0.0018;
+
+  function sampleCore(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const numS=Math.round(lerp(5,18,rhy)),ga=Math.PI*(3-Math.sqrt(5)),subs=[];
+    for(let i=0;i<numS;i++){const ang=ga*i,orb=lerp(0.08,0.55,con),sr=lerp(0.45,0.75,0.5+0.5*Math.sin(i*2.399));subs.push({x:Math.cos(ang)*orb,z:Math.sin(ang)*orb,r:sr});}
+    subs.push({x:0,z:0,r:lerp(0.6,0.9,1.0-con*0.5)});
+    const iso=lerp(0.38,0.55,1.0-rhy*0.4);
+    function f2(rr){let v=0;for(const sc of subs){const dx=cosT*rr-sc.x,dz=sinT*rr-sc.z,d2=dx*dx+dz*dz,cut=sc.r*sc.r;if(d2<cut*4){const t=d2/(cut*4);const k=Math.max(0,1-t);v+=k*k*k*sc.r;}}return v;}
+    let rLo=0.01,rHi=1.8;
+    if(f2(rHi)<iso){for(let it=0;it<14;it++){const m=(rLo+rHi)*0.5;f2(m)>iso?rLo=m:rHi=m;}}
+    return Math.max(2,(rLo+rHi)*0.5*emo*0.85*scale);
+  }
+  function sampleIdeal(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4);
+    let r=baseR*0.7;
+    r+=amb*0.3*(0.5*(1+Math.sin(theta+0.3)))*baseR*0.3;
+    r-=amb*0.2*baseR*Math.exp(-6*(cosT+0.3)*(cosT+0.3));
+    r+=(fbm(cosT*1.2,0,sinT*1.2,3)-0.5)*(1-P.ideal.cla)*0.25*baseR;
+    return Math.max(2,r*scale);
+  }
+  function samplePerceived(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4)*1.25;
+    let r=baseR*0.65;
+    const irr=1-P.perceived.ste/100*0.8;
+    r+=noise3(cosT*3.5,0.7,sinT*3.5)*rol*0.5*irr;
+    r+=noise3(cosT*5+1.3,-0.8,sinT*5+0.4)*rol*0.3*irr;
+    r+=Math.abs(Math.sin(theta*2.1))*rol*0.2;
+    return Math.max(2,r*scale);
+  }
+  function sampleData(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4)*1.25;
+    let r=baseR*1.05*0.65;
+    r+=(fbm(cosT*lerp(2,9,P.data.dig),0,sinT*lerp(2,9,P.data.dig),5)-0.5)*0.35*P.data.dig*baseR;
+    return Math.max(2,r*scale);
+  }
+
+  const N=200;
+  function pathPts(fn,yScale=1.4){
+    return Array.from({length:N+1},(_,i)=>{
+      const t=(i/N)*Math.PI*2;
+      const r=fn(t);
+      return `${(cx+Math.cos(t)*r).toFixed(1)},${(cy+Math.sin(t)*r*yScale).toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function hatchLines(fn,color,spacing=12,angle=Math.PI/4,yScale=1.4){
+    let lines='';
+    const maxR=300;
+    for(let d=-maxR*2;d<maxR*2;d+=spacing){
+      const cos=Math.cos(angle),sin=Math.sin(angle);
+      const perp=angle+Math.PI/2;
+      const x1=cx+d*Math.cos(perp)-maxR*cos, y1=cy+d*Math.sin(perp)-maxR*sin;
+      const x2=cx+d*Math.cos(perp)+maxR*cos, y2=cy+d*Math.sin(perp)+maxR*sin;
+      lines+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="0.5" opacity="0.4"/>`;
+    }
+    return `<g clip-path="url(#clip_${color.replace('#','')})"><g>${lines}</g></g>`;
+  }
+
+  const cH=toHex(P.core.tone), iH=toHex(P.ideal.tone), pH=toHex(P.perceived.tone), dH=toHex(P.data.tone);
+
+  const svg=`<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    ${layerVis.core?`<clipPath id="clip_${cH.replace('#','')}"><polygon points="${pathPts(sampleCore)}"/></clipPath>`:''}
+    ${layerVis.ideal?`<clipPath id="clip_${iH.replace('#','')}"><polygon points="${pathPts(sampleIdeal)}"/></clipPath>`:''}
+    ${layerVis.perceived?`<clipPath id="clip_${pH.replace('#','')}"><polygon points="${pathPts(samplePerceived)}"/></clipPath>`:''}
+  </defs>
+  <rect width="${W}" height="${H}" fill="#0e0e12"/>
+  <line x1="${cx}" y1="20" x2="${cx}" y2="${H-20}" stroke="#1a1a2a" stroke-width="1" stroke-dasharray="4,6"/>
+  <text x="20" y="22" font-family="monospace" font-size="8" fill="#333" letter-spacing="2">CROSS SECTION — EQUATORIAL PLANE</text>
+  ${layerVis.data?`<polygon points="${pathPts(sampleData)}" fill="${dH}" opacity="0.1"/>`:''}
+  ${layerVis.perceived?`<polygon points="${pathPts(samplePerceived)}" fill="${pH}" opacity="0.15"/>`:''}
+  ${layerVis.ideal?`<polygon points="${pathPts(sampleIdeal)}" fill="${iH}" opacity="0.18"/>`:''}
+  ${layerVis.core?`<polygon points="${pathPts(sampleCore)}" fill="${cH}" opacity="0.28"/>`:''}
+  ${layerVis.core?hatchLines(sampleCore,cH,10,Math.PI/4):''}
+  ${layerVis.ideal?hatchLines(sampleIdeal,iH,15,-Math.PI/5):''}
+  ${layerVis.perceived?hatchLines(samplePerceived,pH,20,Math.PI/6):''}
+  ${layerVis.data?`<polygon points="${pathPts(sampleData)}" fill="none" stroke="${dH}" stroke-width="1" stroke-dasharray="3,5" opacity="0.7"/>`:''}
+  ${layerVis.perceived?`<polygon points="${pathPts(samplePerceived)}" fill="none" stroke="${pH}" stroke-width="1.8" opacity="0.9"/>`:''}
+  ${layerVis.ideal?`<polygon points="${pathPts(sampleIdeal)}" fill="none" stroke="${iH}" stroke-width="1.6" opacity="0.9"/>`:''}
+  ${layerVis.core?`<polygon points="${pathPts(sampleCore)}" fill="none" stroke="${cH}" stroke-width="2.2" opacity="1"/>`:''}
+  ${layerVis.core?`<text x="${cx+sampleCore(0.3)+48}" y="${cy-10}" font-family="monospace" font-size="9" fill="${cH}" font-weight="bold">CORE</text><line x1="${cx+sampleCore(0.3)}" y1="${cy}" x2="${cx+sampleCore(0.3)+44}" y2="${cy-8}" stroke="${cH}" stroke-width="0.7"/>`:''}
+  ${layerVis.ideal?`<text x="${cx+sampleIdeal(-0.8)+44}" y="${cy-40}" font-family="monospace" font-size="9" fill="${iH}" font-weight="bold">IDEAL</text>`:''}
+  ${layerVis.perceived?`<text x="${cx-samplePerceived(Math.PI+0.4)-80}" y="${cy-60}" font-family="monospace" font-size="9" fill="${pH}" font-weight="bold">PERCEIVED</text>`:''}
+  ${layerVis.data?`<text x="${cx-sampleData(Math.PI+0.2)-60}" y="${cy+80}" font-family="monospace" font-size="9" fill="${dH}" font-weight="bold">DATA</text>`:''}
+  <g transform="translate(${W-90},${H-28})">
+    <line x1="0" y1="0" x2="50" y2="0" stroke="#333" stroke-width="1"/>
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#333" stroke-width="1"/>
+    <line x1="50" y1="-4" x2="50" y2="4" stroke="#333" stroke-width="1"/>
+    <text x="25" y="-8" font-family="monospace" font-size="7" fill="#333" text-anchor="middle">50mm</text>
+  </g>
+</svg>`;
+
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`figuring_section_${Date.now()}.svg`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function getExportMeshes(layer){
+  const out = [];
+  const pick = (groupName, childIndices)=>{
+    const grp = meshGroups[groupName];
+    if(!grp) return;
+    childIndices.forEach(idx=>{
+      const mesh = grp.children[idx];
+      if(mesh && mesh.isMesh && mesh.geometry) out.push({group: grp, mesh});
+    });
+  };
+  if(layer==='core') pick('core',[0]);
+  else if(layer==='ideal') pick('ideal',[0]);
+  else if(layer==='perceived') pick('perceived',[0]);
+  else if(layer==='data') pick('data',[0,3]);
+  else {
+    pick('core',[0]);
+    pick('ideal',[0]);
+    pick('perceived',[0]);
+    pick('data',[0,3]);
+  }
+  return out;
+}
+
+function geometryToAsciiSTL(geo, matrix, solidName='figuring'){
+  const g = geo.clone().toNonIndexed();
+  g.applyMatrix4(matrix);
+  const pos = g.getAttribute('position');
+  let stl = `solid ${solidName}
+`;
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+  const cb = new THREE.Vector3(), ab = new THREE.Vector3(), normal = new THREE.Vector3();
+  for(let i=0; i<pos.count; i+=3){
+    vA.fromBufferAttribute(pos, i);
+    vB.fromBufferAttribute(pos, i+1);
+    vC.fromBufferAttribute(pos, i+2);
+    cb.subVectors(vC, vB);
+    ab.subVectors(vA, vB);
+    normal.crossVectors(cb, ab).normalize();
+    stl += `  facet normal ${normal.x} ${normal.y} ${normal.z}
+`;
+    stl += `    outer loop
+`;
+    stl += `      vertex ${vA.x} ${vA.y} ${vA.z}
+`;
+    stl += `      vertex ${vB.x} ${vB.y} ${vB.z}
+`;
+    stl += `      vertex ${vC.x} ${vC.y} ${vC.z}
+`;
+    stl += `    endloop
+`;
+    stl += `  endfacet
+`;
+  }
+  stl += `endsolid ${solidName}
+`;
+  return stl;
+}
+
+function exactSTLString(layer){
+  const meshes = getExportMeshes(layer);
+  if(!meshes.length) throw new Error('No mesh available to export yet.');
+  let stl = `solid figuring_${layer}_exact
+`;
+  meshes.forEach(({group, mesh})=>{
+    group.updateMatrix();
+    mesh.updateMatrix();
+    const mat = new THREE.Matrix4().multiplyMatrices(group.matrix, mesh.matrix);
+    const g = mesh.geometry.clone().toNonIndexed();
+    g.applyMatrix4(mat);
+    const pos = g.getAttribute('position');
+    const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+    const cb = new THREE.Vector3(), ab = new THREE.Vector3(), normal = new THREE.Vector3();
+    for(let i=0; i<pos.count; i+=3){
+      vA.fromBufferAttribute(pos, i);
+      vB.fromBufferAttribute(pos, i+1);
+      vC.fromBufferAttribute(pos, i+2);
+      cb.subVectors(vC, vB);
+      ab.subVectors(vA, vB);
+      normal.crossVectors(cb, ab).normalize();
+      stl += `  facet normal ${normal.x} ${normal.y} ${normal.z}
+`;
+      stl += `    outer loop
+`;
+      stl += `      vertex ${vA.x} ${vA.y} ${vA.z}
+`;
+      stl += `      vertex ${vB.x} ${vB.y} ${vB.z}
+`;
+      stl += `      vertex ${vC.x} ${vC.y} ${vC.z}
+`;
+      stl += `    endloop
+`;
+      stl += `  endfacet
+`;
+    }
+  });
+  stl += `endsolid figuring_${layer}_exact
+`;
+  return stl;
+}
+
+function saveTextFile(filename, content){
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+}
+
+function downloadExactSTL(layer){
+  try{
+    const stl = exactSTLString(layer);
+    saveTextFile(`figuring_exact_${layer}.stl`, stl);
+  }catch(err){
+    alert('Exact STL export failed: ' + err.message);
+  }
+}
+
+function downloadSCADWrapper(layer){
+  const stlName = `figuring_exact_${layer}.stl`;
+  const labelMap = {
+    all:'Full figure', core:'Core', ideal:'Ideal', perceived:'Perceived', data:'Data plus stand'
+  };
+  const scad = `// FIGURING exact wrapper
+// Export ${stlName} from the HTML first, then keep this SCAD in the same folder.
+// This imports the exact preview mesh instead of rebuilding an approximation.
+
+import("${stlName}", convexity=10);
+`;
+  saveTextFile(`figuring_exact_${layer}.scad`, scad);
+}
+
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  initThree();
+  activateStage();
+});
+
+function downloadSectionSVG(){
+  const wrap=document.getElementById('canvas-wrap');
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  const cx=W/2, cy=H/2;
+
+  const emo=lerp(60,130,P.core.emo);
+  const prs=lerp(0.5,1.4,P.core.prs);
+  const dis=lerp(0.2,1.0,P.ideal.dis);
+  const amb=lerp(0.3,1.0,P.ideal.amb);
+  const rol=lerp(20,80,P.perceived.rol);
+  const rhy=lerp(0.1,0.9,P.core.rhy);
+  const con=lerp(0.0,0.7,P.core.con);
+  const scale=H*0.0018;
+
+  function sampleCore(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    let r=emo*0.6;
+    const ch1=Math.exp(-15*cosT*cosT);
+    r-=rhy*0.55*ch1;
+    const ch2=Math.exp(-12*(sinT-0.7)*(sinT-0.7));
+    r-=rhy*0.35*ch2;
+    const n=fbm(cosT*2.2+0.5,0,sinT*2.2,4);
+    r+=(n-0.5)*prs*0.6;
+    const vn=noise3(cosT*4+1.1,0.3,sinT*4+0.7);
+    r-=con*vn*vn*0.45;
+    return Math.max(2,r*scale);
+  }
+  function sampleIdeal(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4);
+    let r=baseR*0.7;
+    r+=amb*0.3*(0.5*(1+Math.sin(theta+0.3)))*baseR*0.3;
+    r-=amb*0.2*baseR*Math.exp(-6*(cosT+0.3)*(cosT+0.3));
+    r+=(fbm(cosT*1.2,0,sinT*1.2,3)-0.5)*(1-P.ideal.cla)*0.25*baseR;
+    return Math.max(2,r*scale);
+  }
+  function samplePerceived(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4)*1.25;
+    let r=baseR*0.65;
+    const irr=1-P.perceived.ste/100*0.8;
+    r+=noise3(cosT*3.5,0.7,sinT*3.5)*rol*0.5*irr;
+    r+=noise3(cosT*5+1.3,-0.8,sinT*5+0.4)*rol*0.3*irr;
+    r+=Math.abs(Math.sin(theta*2.1))*rol*0.2;
+    return Math.max(2,r*scale);
+  }
+  function sampleData(theta){
+    const cosT=Math.cos(theta),sinT=Math.sin(theta);
+    const baseR=emo*(0.8+prs*0.2)*(1+dis*0.4)*1.25;
+    let r=baseR*1.05*0.65;
+    r+=(fbm(cosT*lerp(2,9,P.data.dig),0,sinT*lerp(2,9,P.data.dig),5)-0.5)*0.35*P.data.dig*baseR;
+    return Math.max(2,r*scale);
+  }
+
+  const N=200;
+  function pathPts(fn,yScale=1.4){
+    return Array.from({length:N+1},(_,i)=>{
+      const t=(i/N)*Math.PI*2;
+      const r=fn(t);
+      return `${(cx+Math.cos(t)*r).toFixed(1)},${(cy+Math.sin(t)*r*yScale).toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function hatchLines(fn,color,spacing=12,angle=Math.PI/4,yScale=1.4){
+    let lines='';
+    const maxR=300;
+    for(let d=-maxR*2;d<maxR*2;d+=spacing){
+      const cos=Math.cos(angle),sin=Math.sin(angle);
+      const perp=angle+Math.PI/2;
+      const x1=cx+d*Math.cos(perp)-maxR*cos, y1=cy+d*Math.sin(perp)-maxR*sin;
+      const x2=cx+d*Math.cos(perp)+maxR*cos, y2=cy+d*Math.sin(perp)+maxR*sin;
+      lines+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="0.5" opacity="0.4"/>`;
+    }
+    return `<g clip-path="url(#clip_${color.replace('#','')})"><g>${lines}</g></g>`;
+  }
+
+  const cH=toHex(P.core.tone), iH=toHex(P.ideal.tone), pH=toHex(P.perceived.tone), dH=toHex(P.data.tone);
+
+  const svg=`<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    ${layerVis.core?`<clipPath id="clip_${cH.replace('#','')}"><polygon points="${pathPts(sampleCore)}"/></clipPath>`:''}
+    ${layerVis.ideal?`<clipPath id="clip_${iH.replace('#','')}"><polygon points="${pathPts(sampleIdeal)}"/></clipPath>`:''}
+    ${layerVis.perceived?`<clipPath id="clip_${pH.replace('#','')}"><polygon points="${pathPts(samplePerceived)}"/></clipPath>`:''}
+  </defs>
+  <rect width="${W}" height="${H}" fill="#0e0e12"/>
+  <!-- Axis -->
+  <line x1="${cx}" y1="20" x2="${cx}" y2="${H-20}" stroke="#1a1a2a" stroke-width="1" stroke-dasharray="4,6"/>
+  <text x="20" y="22" font-family="monospace" font-size="8" fill="#333" letter-spacing="2">CROSS SECTION — EQUATORIAL PLANE</text>
+  <!-- Fills -->
+  ${layerVis.data?`<polygon points="${pathPts(sampleData)}" fill="${dH}" opacity="0.1"/>`:''}
+  ${layerVis.perceived?`<polygon points="${pathPts(samplePerceived)}" fill="${pH}" opacity="0.15"/>`:''}
+  ${layerVis.ideal?`<polygon points="${pathPts(sampleIdeal)}" fill="${iH}" opacity="0.18"/>`:''}
+  ${layerVis.core?`<polygon points="${pathPts(sampleCore)}" fill="${cH}" opacity="0.28"/>`:''}
+  <!-- Hatching -->
+  ${layerVis.core?hatchLines(sampleCore,cH,10,Math.PI/4):''}
+  ${layerVis.ideal?hatchLines(sampleIdeal,iH,15,-Math.PI/5):''}
+  ${layerVis.perceived?hatchLines(samplePerceived,pH,20,Math.PI/6):''}
+  <!-- Outlines -->
+  ${layerVis.data?`<polygon points="${pathPts(sampleData)}" fill="none" stroke="${dH}" stroke-width="1" stroke-dasharray="3,5" opacity="0.7"/>`:''}
+  ${layerVis.perceived?`<polygon points="${pathPts(samplePerceived)}" fill="none" stroke="${pH}" stroke-width="1.8" opacity="0.9"/>`:''}
+  ${layerVis.ideal?`<polygon points="${pathPts(sampleIdeal)}" fill="none" stroke="${iH}" stroke-width="1.6" opacity="0.9"/>`:''}
+  ${layerVis.core?`<polygon points="${pathPts(sampleCore)}" fill="none" stroke="${cH}" stroke-width="2.2" opacity="1"/>`:''}
+  <!-- Labels -->
+  ${layerVis.core?`<text x="${cx+sampleCore(0.3)+48}" y="${cy-10}" font-family="monospace" font-size="9" fill="${cH}" font-weight="bold">CORE</text><line x1="${cx+sampleCore(0.3)}" y1="${cy}" x2="${cx+sampleCore(0.3)+44}" y2="${cy-8}" stroke="${cH}" stroke-width="0.7"/>`:''}
+  ${layerVis.ideal?`<text x="${cx+sampleIdeal(-0.8)+44}" y="${cy-40}" font-family="monospace" font-size="9" fill="${iH}" font-weight="bold">IDEAL</text><line x1="${cx+sampleIdeal(-0.8)*Math.cos(-0.8)}" y1="${cy+sampleIdeal(-0.8)*Math.sin(-0.8)*1.4}" x2="${cx+sampleIdeal(-0.8)+40}" y2="${cy-38}" stroke="${iH}" stroke-width="0.7"/>`:''}
+  ${layerVis.perceived?`<text x="${cx-samplePerceived(Math.PI+0.4)-80}" y="${cy-60}" font-family="monospace" font-size="9" fill="${pH}" font-weight="bold">PERCEIVED</text>`:''}
+  ${layerVis.data?`<text x="${cx-sampleData(Math.PI+0.2)-60}" y="${cy+80}" font-family="monospace" font-size="9" fill="${dH}" stroke-dasharray="2,3" font-weight="bold">DATA</text>`:''}
+  <!-- Scale bar -->
+  <g transform="translate(${W-90},${H-28})">
+    <line x1="0" y1="0" x2="50" y2="0" stroke="#333" stroke-width="1"/>
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#333" stroke-width="1"/>
+    <line x1="50" y1="-4" x2="50" y2="4" stroke="#333" stroke-width="1"/>
+    <text x="25" y="-8" font-family="monospace" font-size="7" fill="#333" text-anchor="middle">50mm</text>
+  </g>
+</svg>`;
+
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`figuring_section_${Date.now()}.svg`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+// ══════════════════════════════════════════════════
+// WALLPAPER / STORY GENERATOR
+// ══════════════════════════════════════════════════
+let wpFormat = 'story';
+let wpLayout = 'grid23';
+let wpBg = 'cream';
+let wpRot = 0;
+let wpLbl = 0;
+
+const WP_SIZES = {
+  story:    [1080, 1920],
+  square:   [1080, 1080],
+  wallpaper:[1080, 2340]
+};
+const WP_BG_COLORS = {
+  cream:    '#f0ece4',
+  black:    '#0a0a0a',
+  blush:    '#fce8ee',
+  midnight: '#0d0820',
+  sage:     '#e8f0e8',
+  'grad-pink':  null,
+  'grad-peach': null,
+  'grad-night': null
+};
+const WP_BG_GRADS = {
+  'grad-pink':  ['#fce4ee','#e8d0f8'],
+  'grad-peach': ['#fff0e0','#ffe0d0'],
+  'grad-night': ['#0d0820','#1a0828']
+};
+
+function openWallpaper(){
+  document.getElementById('wallpaper-modal').style.display='flex';
+  wpRender();
+}
+function closeWallpaper(){
+  document.getElementById('wallpaper-modal').style.display='none';
+}
+
+function wpSetFormat(el, fmt){
+  wpFormat = fmt;
+  document.querySelectorAll('.wp-fmt-btn').forEach(b=>{
+    const active = b===el;
+    b.style.borderColor = active ? '#eb6190' : '#333';
+    b.style.background  = active ? '#eb619022' : 'transparent';
+    b.style.color       = active ? '#eb6190' : '#555';
+  });
+  const sz = WP_SIZES[fmt];
+  document.getElementById('wp-size-note').textContent = `${sz[0]} × ${sz[1]} px · PNG`;
+  wpRender();
+}
+function wpSetLayout(el, lay){
+  wpLayout = lay;
+  document.querySelectorAll('.wp-lay-btn').forEach(b=>{
+    const active = b===el;
+    b.style.borderColor = active ? '#eb6190' : '#333';
+    b.style.background  = active ? '#eb619022' : 'transparent';
+    b.style.color       = active ? '#eb6190' : '#555';
+  });
+  wpRender();
+}
+function wpSetBg(el, bg){
+  wpBg = bg;
+  document.querySelectorAll('.wp-bg-btn').forEach(b=>{
+    b.style.borderColor = b===el ? '#eb6190' : 'transparent';
+  });
+  wpRender();
+}
+function wpSetRot(el, r){
+  wpRot = r;
+  document.querySelectorAll('.wp-rot-btn').forEach(b=>{
+    const active = b===el;
+    b.style.borderColor = active ? '#eb6190' : '#333';
+    b.style.background  = active ? '#eb619022' : 'transparent';
+    b.style.color       = active ? '#eb6190' : '#555';
+  });
+  wpRender();
+}
+function wpSetLbl(el, l){
+  wpLbl = l;
+  document.querySelectorAll('.wp-lbl-btn').forEach(b=>{
+    const active = b===el;
+    b.style.borderColor = active ? '#eb6190' : '#333';
+    b.style.background  = active ? '#eb619022' : 'transparent';
+    b.style.color       = active ? '#eb6190' : '#555';
+  });
+  wpRender();
+}
+
+// ── Draw one figurine into a canvas 2D context ──
+// Uses layered concentric radial shapes to mimic the 4-layer jelly candy look
+function wpDrawFigurine(ctx, cx, cy, radius, varSeed, rotation, isDark){
+  ctx.save();
+  ctx.translate(cx, cy);
+  if(rotation) ctx.rotate(rotation);
+
+  const variation = parseInt(document.getElementById('wp-variation').value) / 100;
+  document.getElementById('wp-var-val').textContent = Math.round(variation*100);
+
+  // Vary params per tile using seed
+  function varyParam(base, seed, amt){
+    const n = hash(seed * 17.3 + varSeed * 91.7) * 2 - 1;
+    return Math.max(0, Math.min(1, base + n * amt * variation));
+  }
+
+  const cp_ = P.core, ip_ = P.ideal, pp_ = P.perceived, dp_ = P.data;
+  const emo_  = lerp(0.5, 1.0, varyParam(cp_.emo/100, 1, 0.4));
+  const rhy_  = varyParam(cp_.rhy/100, 2, 0.4);
+  const con_  = varyParam(cp_.con/100, 3, 0.35);
+  const dis_  = varyParam(ip_.dis/100, 4, 0.3);
+  const amb_  = varyParam(ip_.amb/100, 5, 0.3);
+  const rol_  = varyParam(pp_.rol/100, 6, 0.35);
+  const dig_  = varyParam(dp_.dig/100, 7, 0.25);
+
+  // Layer colours
+  const coreTone  = Object.keys(TONE)[Math.floor(hash(varSeed*3.1) * Object.keys(TONE).length)] || cp_.tone;
+  const idealTone = ip_.tone;
+  const percTone  = pp_.tone;
+  const dataTone  = dp_.tone;
+
+  function toneColor(t, alpha){
+    const c = TONE[t] || [0.8, 0.5, 0.6];
+    return `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},${alpha})`;
+  }
+  function toneInnerColor(t, alpha){
+    const c = TONE_INNER[t] || [0.2, 0.1, 0.15];
+    return `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},${alpha})`;
+  }
+
+  // ── Layer 4: Data squircle (outermost) ──
+  const dataR = radius * lerp(0.92, 1.0, dig_);
+  const squareness = lerp(3, 10, dig_);
+  ctx.beginPath();
+  for(let i=0; i<=80; i++){
+    const a = (i/80)*Math.PI*2;
+    const cosA = Math.abs(Math.cos(a)), sinA = Math.abs(Math.sin(a));
+    const sqR = dataR / Math.pow(Math.pow(cosA,squareness)+Math.pow(sinA,squareness), 1/squareness);
+    const px = sqR * Math.cos(a), py = sqR * Math.sin(a) * lerp(0.75,1.0,dig_);
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  const dataGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, dataR);
+  dataGrad.addColorStop(0,   toneInnerColor(dataTone, isDark ? 0.5 : 0.35));
+  dataGrad.addColorStop(0.5, toneColor(dataTone, isDark ? 0.38 : 0.25));
+  dataGrad.addColorStop(1,   toneColor(dataTone, isDark ? 0.18 : 0.12));
+  ctx.fillStyle = dataGrad;
+  ctx.fill();
+
+  // ── Layer 3: Perceived amoeba ──
+  const percR = radius * 0.82;
+  const waveCount = Math.round(lerp(5,12,rol_));
+  ctx.beginPath();
+  for(let i=0; i<=100; i++){
+    const a = (i/100)*Math.PI*2;
+    const wave = 1.0 + lerp(0.04,0.18,rol_) * Math.cos(a*waveCount + varSeed*2.1);
+    const r = percR * wave;
+    const px = r*Math.cos(a), py = r*Math.sin(a)*0.82;
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  const percGrad = ctx.createRadialGradient(0, -percR*0.1, 0, 0, 0, percR*1.1);
+  percGrad.addColorStop(0,   toneInnerColor(percTone, isDark ? 0.6 : 0.45));
+  percGrad.addColorStop(0.55,toneColor(percTone, isDark ? 0.45 : 0.32));
+  percGrad.addColorStop(1,   toneColor(percTone, isDark ? 0.22 : 0.15));
+  ctx.fillStyle = percGrad;
+  ctx.fill();
+
+  // ── Layer 2: Ideal ribbed shape ──
+  const idealR = radius * lerp(0.58, 0.72, dis_);
+  const ribCount = Math.round(lerp(5,11,amb_));
+  ctx.beginPath();
+  for(let i=0; i<=120; i++){
+    const a = (i/120)*Math.PI*2;
+    const rib = 1.0 - lerp(0.05,0.22,amb_) * Math.pow(Math.max(0,-Math.cos(a*ribCount)), lerp(3,1.5,0.5));
+    const r = idealR * rib;
+    const px = r*Math.cos(a), py = r*Math.sin(a)*lerp(0.8,1.0,amb_);
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  const idealGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, idealR);
+  idealGrad.addColorStop(0,   toneInnerColor(idealTone, isDark ? 0.55 : 0.40));
+  idealGrad.addColorStop(0.6, toneColor(idealTone, isDark ? 0.30 : 0.20));
+  idealGrad.addColorStop(1,   toneColor(idealTone, isDark ? 0.15 : 0.10));
+  ctx.fillStyle = idealGrad;
+  ctx.fill();
+
+  // ── Layer 1: Core bubble cluster (innermost) ──
+  // Draw N circles merging — use additive blending via soft brush
+  const numBub = Math.round(lerp(3,18,rhy_));
+  const baseR  = radius * lerp(0.18, 0.35, emo_);
+  const spread = lerp(0.12, 0.55, con_) * radius;
+  const goldenA = Math.PI*(3-Math.sqrt(5));
+  for(let b=0; b<numBub; b++){
+    const t = b/Math.max(1,numBub-1);
+    const angle = b*goldenA + varSeed*0.5;
+    const dist  = spread*(0.15+Math.pow(t,0.6)*0.85);
+    const bx = Math.cos(angle)*dist, by = Math.sin(angle)*dist*0.9;
+    const br = baseR * lerp(1.0, 0.5, t) * (0.7 + hash(b*7.3+varSeed)*0.6);
+
+    const bubGrad = ctx.createRadialGradient(bx-br*0.2, by-br*0.25, br*0.05, bx, by, br);
+    bubGrad.addColorStop(0,   toneColor(coreTone, isDark ? 0.95 : 0.88));
+    bubGrad.addColorStop(0.3, toneColor(coreTone, isDark ? 0.82 : 0.72));
+    bubGrad.addColorStop(0.7, toneInnerColor(coreTone, isDark ? 0.65 : 0.55));
+    bubGrad.addColorStop(1,   toneInnerColor(coreTone, isDark ? 0.15 : 0.08));
+    ctx.beginPath();
+    ctx.arc(bx, by, Math.max(1, br), 0, Math.PI*2);
+    ctx.fillStyle = bubGrad;
+    ctx.fill();
+
+    // Specular highlight per bubble
+    const hiGrad = ctx.createRadialGradient(bx-br*0.28,by-br*0.30,0, bx-br*0.2,by-br*0.2,br*0.55);
+    hiGrad.addColorStop(0,'rgba(255,255,255,0.55)');
+    hiGrad.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI*2);
+    ctx.fillStyle = hiGrad;
+    ctx.fill();
+  }
+
+  // ── Glossy rim on data squircle ──
+  ctx.beginPath();
+  for(let i=0; i<=80; i++){
+    const a = (i/80)*Math.PI*2;
+    const cosA = Math.abs(Math.cos(a)), sinA = Math.abs(Math.sin(a));
+    const sqR = (dataR+1) / Math.pow(Math.pow(cosA,squareness)+Math.pow(sinA,squareness), 1/squareness);
+    const px = sqR*Math.cos(a), py = sqR*Math.sin(a)*lerp(0.75,1.0,dig_);
+    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = radius * 0.018;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function wpDrawBackground(ctx, W, H){
+  if(WP_BG_GRADS[wpBg]){
+    const [c1,c2] = WP_BG_GRADS[wpBg];
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,c1); grad.addColorStop(1,c2);
+    ctx.fillStyle=grad;
+  } else {
+    ctx.fillStyle = WP_BG_COLORS[wpBg] || '#f0ece4';
+  }
+  ctx.fillRect(0,0,W,H);
+}
+
+function wpGetTilePositions(W, H, layout){
+  const positions = [];
+  if(layout==='grid23'){
+    const cols=2, rows=3;
+    const cw=W/cols, ch=H/rows;
+    const r = Math.min(cw,ch)*0.38;
+    for(let row=0;row<rows;row++) for(let col=0;col<cols;col++)
+      positions.push({x:cw*(col+0.5), y:ch*(row+0.5), r});
+  } else if(layout==='grid34'){
+    const cols=3, rows=4;
+    const cw=W/cols, ch=H/rows;
+    const r = Math.min(cw,ch)*0.40;
+    for(let row=0;row<rows;row++) for(let col=0;col<cols;col++)
+      positions.push({x:cw*(col+0.5), y:ch*(row+0.5), r});
+  } else if(layout==='grid44'){
+    const cols=4, rows=4;
+    const cw=W/cols, ch=H/rows;
+    const r = Math.min(cw,ch)*0.40;
+    for(let row=0;row<rows;row++) for(let col=0;col<cols;col++)
+      positions.push({x:cw*(col+0.5), y:ch*(row+0.5), r});
+  } else if(layout==='scattered'){
+    // Organic scattered placement — denser toward center, random rotations
+    const count = Math.round(W*H / 90000);
+    const baseR = Math.min(W,H) * 0.11;
+    const placed = [];
+    let attempts = 0;
+    while(placed.length < count && attempts < 2000){
+      attempts++;
+      const x = baseR + hash(attempts*7.1+placed.length*3.3)*(W-2*baseR);
+      const y = baseR + hash(attempts*11.7+placed.length*5.1)*(H-2*baseR);
+      const r = baseR * (0.6 + hash(attempts*5.5)*0.8);
+      // Check overlap
+      let ok = true;
+      for(const p of placed){
+        const dx=x-p.x, dy=y-p.y;
+        if(Math.sqrt(dx*dx+dy*dy) < (r+p.r)*0.82){ ok=false; break; }
+      }
+      if(ok) placed.push({x,y,r,rot:hash(attempts*3.3)*Math.PI*2});
+    }
+    return placed;
+  } else if(layout==='bigone'){
+    const r = Math.min(W,H) * 0.40;
+    positions.push({x:W/2, y:H/2, r});
+  }
+  return positions;
+}
+
+function wpRender(){
+  const [W,H] = WP_SIZES[wpFormat];
+  const canvas = document.getElementById('wp-canvas');
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+  const isDark = ['black','midnight','grad-night'].includes(wpBg);
+
+  // Background
+  wpDrawBackground(ctx, W, H);
+
+  // Tiles
+  const tiles = wpGetTilePositions(W, H, wpLayout);
+  tiles.forEach((tile, i) => {
+    const rot = wpRot===1 ? (hash(i*13.7) - 0.5) * Math.PI * 0.35 : 0;
+    wpDrawFigurine(ctx, tile.x, tile.y, tile.r, i * 137.5 + 1, rot, isDark);
+  });
+
+  // Optional label
+  if(wpLbl===1){
+    ctx.save();
+    const fontSize = Math.round(W * 0.028);
+    ctx.font = `700 ${fontSize}px monospace`;
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+    ctx.textAlign='center';
+    ctx.fillText('FIGURING', W/2, H - fontSize*1.2);
+    ctx.restore();
+  }
+}
+
+function wpDownload(){
+  const canvas = document.getElementById('wp-canvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  const [W,H] = WP_SIZES[wpFormat];
+  a.download = `figuring_wallpaper_${W}x${H}_${Date.now()}.png`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+</script>
+</body>
+</html>

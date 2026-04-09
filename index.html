@@ -95,6 +95,47 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
 .dl-btn:hover{border-color:var(--yellow);color:var(--yellow)}
 .dl-note{font-size:7px;color:#333;font-weight:400}
 .modal-close{margin-top:14px;width:100%;padding:10px;background:var(--red);color:#fff;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;cursor:pointer;border:none;text-transform:uppercase}
+
+.helper-note{font-size:7px;color:#7a7a7a;line-height:1.75;margin:8px 0 10px;padding:8px 9px;border:1px solid #1f1f1f;background:#101010}
+.helper-note strong{color:#d0d0d0;font-weight:700}
+.data-mode-list{margin-top:6px;font-size:7px;color:#666;line-height:1.7}
+.data-mode-list span{display:block}
+#canvas-wrap{touch-action:none}
+
+@media (max-width: 900px){
+  body{overflow:auto;height:auto;min-height:100dvh;cursor:auto}
+  #app{flex-direction:column;min-height:100dvh;height:auto}
+  #sidebar{width:100%;min-width:0;min-height:58dvh;border-right:none;border-bottom:2px solid var(--red);overflow:visible}
+  #sidebar-header{padding:14px 14px 10px}
+  .title-main{font-size:30px}
+  .title-sub{font-size:8px}
+  #stage-nav{position:sticky;top:0;z-index:30;background:#1a1410}
+  .stage-tab{padding:10px 4px;font-size:8px}
+  .stage-tab .tab-num{font-size:16px}
+  #controls-area{padding:14px 14px 6px;overflow:visible}
+  .stage-label{font-size:24px}
+  .stage-desc{font-size:11px;line-height:1.75;margin-bottom:12px}
+  .journal-prompt,.slider-name,.tone-label,.info-chip,.helper-note,.data-mode-list{font-size:10px}
+  .journal-area{font-size:14px;height:96px}
+  input[type=range]{height:6px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
+  .tone-swatch{width:34px;height:34px}
+  .tone-swatch span{font-size:8px;bottom:-14px}
+  .slider-value{font-size:18px}
+  #view-controls{padding:10px 14px;position:sticky;bottom:56px;background:#1a1410;z-index:25}
+  .view-btn{padding:10px 8px;font-size:9px}
+  #bottom-nav{padding:10px 14px;position:sticky;bottom:0;background:#1a1410;z-index:30}
+  .btn{padding:14px 8px;font-size:10px}
+  #canvas-wrap{height:42dvh;min-height:320px;order:-1}
+  #layer-badge{top:10px;right:10px;font-size:10px}
+  #hint-bar{padding:8px 10px;gap:8px;flex-wrap:wrap;font-size:8px}
+  .hint-item{font-size:8px}
+  .hint-key{font-size:7px}
+  #hint-bar button{padding:8px 10px!important;font-size:8px!important}
+  #wallpaper-modal{flex-direction:column!important}
+  #wallpaper-modal > div:first-child{width:100%!important;min-width:0!important;max-height:50dvh}
+}
+
 </style>
 </head>
 <body>
@@ -117,7 +158,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
     <!-- CORE -->
     <div class="stage-panel active" id="panel-core">
       <div class="stage-label" style="color:var(--yellow)">The Core Self</div>
-      <div class="stage-desc">Bubble cluster — 3 to 25 spheres merging together like soap bubbles or sea foam. Each figurine grows a unique organic cluster. Watertight for resin 3D printing.</div>
+      <div class="stage-desc">Who I am when no one is watching.</div>
       <span class="info-chip chip-core">Private Reflection</span>
       <div class="journal-prompt">↳ Write freely about your emotional world right now</div>
       <textarea class="journal-area" id="journal-core" placeholder="What am I feeling most deeply? What contradicts itself inside me..." oninput="analyzeJournal()"></textarea>
@@ -139,7 +180,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
     <!-- IDEAL -->
     <div class="stage-panel" id="panel-ideal">
       <div class="stage-label" style="color:#7FFFD4">The Ideal Self</div>
-      <div class="stage-desc">Ribbed pumpkin dome — smooth vertical ribs, thick rounded form. Fully solid & printable in translucent resin for a beautiful candy-glass toy.</div>
+      <div class="stage-desc">Who I am trying to become.</div>
       <span class="info-chip chip-ideal">Aspirational Layer</span>
       <div class="journal-prompt">↳ Describe who you want to become</div>
       <textarea class="journal-area" id="journal-ideal" placeholder="In 5 years I want to be... I aspire to..."></textarea>
@@ -159,7 +200,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
     <!-- PERCEIVED -->
     <div class="stage-panel" id="panel-perceived">
       <div class="stage-label" style="color:var(--red)">The Perceived Self</div>
-      <div class="stage-desc">Wavy amoeba blob — organic undulating perimeter, flat base. Prints beautifully in coloured resin with the gradient baked into the candy gloss finish.</div>
+      <div class="stage-desc">Who others believe I am.</div>
       <span class="info-chip chip-perceived">Social Layer</span>
       <div class="journal-prompt">↳ How do others describe you?</div>
       <textarea class="journal-area" id="journal-perceived" placeholder="People say I am... My social roles are..."></textarea>
@@ -179,8 +220,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
     <!-- DATA -->
     <div class="stage-panel" id="panel-data">
       <div class="stage-label" style="color:var(--blue)">The Data Self</div>
-      <div class="stage-desc">Squircle jelly form — superellipse silhouette (circle to rounded square). 3D print in translucent PETG or resin for a satisfying chunky toy.</div>
+      <div class="stage-desc">Who I become through what I leave behind.</div>
       <span class="info-chip chip-data">Algorithmic Layer</span>
+      <div class="data-mode-list"><span>Repetition = how routine your digital habits feel</span><span>Volatility = how quickly your attention shifts</span><span>Silence = what you keep hidden, delete or withhold</span><span>Digital Dominance = how strongly platforms shape your day</span></div>
       <div class="slider-group"><div class="slider-label"><span class="slider-name">Repetition (dimple depth)</span><span class="slider-value" id="val-rep">60</span></div><input type="range" class="s-data" id="sl-rep" min="0" max="100" value="60" oninput="sv('sl-rep','val-rep');build()"></div>
       <div class="slider-group"><div class="slider-label"><span class="slider-name">Volatility (form inflation)</span><span class="slider-value" id="val-vol">45</span></div><input type="range" class="s-data" id="sl-vol" min="0" max="100" value="45" oninput="sv('sl-vol','val-vol');build()"></div>
       <div class="slider-group"><div class="slider-label"><span class="slider-name">Silence (surface erosion)</span><span class="slider-value" id="val-sil">35</span></div><input type="range" class="s-data" id="sl-sil" min="0" max="100" value="35" oninput="sv('sl-sil','val-sil');build()"></div>
@@ -217,9 +259,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
     <div class="hint-item"><span class="hint-key">DBL-CLICK</span>Toggle layer</div>
     <div class="hint-item"><span class="hint-key">1-4</span>Layers</div>
     <div class="hint-item"><span class="hint-key">R</span>Reset</div>
-    <div class="hint-item" style="margin-left:auto">
-      <button onclick="openChainPreview()" style="background:var(--yellow);color:#000;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase">⛓ CHAIN PREVIEW</button>
-      <button onclick="openWallpaper()" style="background:#eb6190;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase;margin-left:6px">✦ WALLPAPER</button>
+    <div class="hint-item" style="margin-left:auto"><button onclick="openChainPreview()" style="background:var(--yellow);color:#000;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase">⛓ CHAIN PREVIEW</button><button onclick="openWallpaper()" style="background:#eb6190;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase;margin-left:6px">✦ WALLPAPER</button>
     </div>
   </div>
 </div>
@@ -358,8 +398,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
 <div id="download-modal">
   <div class="modal-box">
     <div class="modal-title">Export Figurine</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;border:1px solid #e8b84b;background:#1a160a"><span style="font-size:9px;color:#e8b84b;letter-spacing:.08em;font-family:'Space Mono',monospace">⬡ 3D PRINT READY — all forms are watertight closed meshes with flat bases, min 2.5mm wall thickness. Optimized for resin (SLA/MSLA) and FDM printing. Recommended: translucent PETG or resin for candy-glass effect.</span></div>
-<div class="modal-desc">Download your identity figurine. The JPEG captures the current view. The SVG is a cross-section vector. For 3D printing, export the exact STL from the live preview mesh. Optional OpenSCAD wrappers import those exact STL files so the form matches the preview.</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;border:1px solid #e8b84b;background:#1a160a"><span style="font-size:9px;color:#e8b84b;letter-spacing:.08em;font-family:'Space Mono',monospace">⬡ 3D PRINT READY — all forms are watertight closed meshes with clean closed undersides and no separate pedestal bases. Optimized for resin (SLA/MSLA) and FDM printing. Recommended: translucent PETG or resin for candy-glass effect.</span></div>
+<div class="modal-desc">Download your identity figurine. The JPEG captures the current view. The SVG is a cross-section vector. For 3D printing, export the exact STL from the live preview mesh. Optional OpenSCAD wrappers import those exact STL files so the form matches the preview, with no separate stand geometry.</div>
     <div class="dl-section">Image Formats</div>
     <div class="dl-opts">
       <button class="dl-btn" onclick="downloadJPEG()">Download 3D View as JPEG<span class="dl-note">Current render</span></button>
@@ -371,7 +411,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
       <button class="dl-btn" onclick="downloadExactSTL('core')">Core Only<span class="dl-note">.stl — exact preview mesh</span></button>
       <button class="dl-btn" onclick="downloadExactSTL('ideal')">Ideal Only<span class="dl-note">.stl — exact preview mesh</span></button>
       <button class="dl-btn" onclick="downloadExactSTL('perceived')">Perceived Only<span class="dl-note">.stl — exact preview mesh</span></button>
-      <button class="dl-btn" onclick="downloadExactSTL('data')">Data + Stand<span class="dl-note">.stl — exact preview mesh</span></button>
+      <button class="dl-btn" onclick="downloadExactSTL('data')">Data<span class="dl-note">.stl — exact preview mesh</span></button>
     </div>
     <div class="dl-section">OpenSCAD Wrapper</div>
     <div class="dl-opts">
@@ -379,7 +419,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
       <button class="dl-btn" onclick="downloadSCADWrapper('core')">Core Only<span class="dl-note">.scad imports exact STL</span></button>
       <button class="dl-btn" onclick="downloadSCADWrapper('ideal')">Ideal Only<span class="dl-note">.scad imports exact STL</span></button>
       <button class="dl-btn" onclick="downloadSCADWrapper('perceived')">Perceived Only<span class="dl-note">.scad imports exact STL</span></button>
-      <button class="dl-btn" onclick="downloadSCADWrapper('data')">Data + Stand<span class="dl-note">.scad imports exact STL</span></button>
+      <button class="dl-btn" onclick="downloadSCADWrapper('data')">Data<span class="dl-note">.scad imports exact STL</span></button>
     </div>
     <button class="modal-close" onclick="closeDownload()">✕ Close</button>
   </div>
@@ -493,12 +533,12 @@ function fbm(x,y,z,oct=5){ let v=0,a=0.5; for(let i=0;i<oct;i++){v+=a*noise3(x,y
 // GEOMETRY — Blooming Moon jelly candy forms
 // All meshes are SOLID & WATERTIGHT for 3D printing:
 //   • minimum wall 2.5mm, no overhangs >45°
-//   • flat bottom base on every form
+//   • closed printable undersides on every form
 //   • toy-safe rounded edges, no sharp tips
 //   • full closed manifold geometry
 // ══════════════════════════════════════════════════
 
-// ── SHARED: flat closed base cap ──
+// ── SHARED: closed underside cap ──
 function addBaseCap(verts, inds, uvs, segs, baseY, baseR){
   const ci = verts.length / 3;
   verts.push(0, baseY, 0); uvs.push(0.5, 0.5);
@@ -600,7 +640,7 @@ function makeCoreGeo(emo, rhy, con, prs){
       const sc = emo * (0.88 + prs*0.12);
       r = Math.max(4, r * sc);
 
-      // Flatten bottom for 3D printing
+      // Close underside for 3D printing
       const flatBase = v > 0.84 ? lerp(1.0, 0.12, (v-0.84)/0.16) : 1.0;
       const yStretch = 1.0 + prs*0.18;
       verts.push(r*sinp*Math.cos(theta), r*cosp*yStretch*flatBase, r*sinp*Math.sin(theta));
@@ -664,7 +704,7 @@ function makeIdealGeo(cla, amb, dis, coreEmo, corePrs){
 
       r = Math.max(3, r);
 
-      // Bottom flatten for printing
+      // Close underside for printing
       const flatBase = v > 0.88 ? lerp(1.0, 0.15, (v-0.88)/0.12) : 1.0;
       const yRaw = r * cosp * lerp(0.85, 1.15, amb);
       const y = yRaw * flatBase;
@@ -725,7 +765,7 @@ function makePerceivedGeo(rol, ste, val, coreEmo, corePrs, idealDis){
 
       r = Math.max(3, r);
 
-      // Flatten bottom strongly — like a jellybean sitting on a surface
+      // Close underside while keeping a grounded silhouette
       const flatBase = v > 0.80 ? lerp(1.0, 0.08, (v-0.80)/0.20) : 1.0;
       const yRaw = r * cosp * 0.82; // flatter overall
       const y = yRaw * flatBase;
@@ -787,7 +827,7 @@ function makeDataGeo(rep, vol, sil, dig, baseR){
       r *= lerp(0.92, 1.08, vol);
       r = Math.max(3, r);
 
-      // Flat base
+      // Closed underside
       const flatBase = v > 0.82 ? lerp(1.0, 0.10, (v-0.82)/0.18) : 1.0;
       const yRaw = r * cosp * lerp(0.75, 1.0, dig);
       const y = yRaw * flatBase;
@@ -2075,7 +2115,7 @@ function downloadExactSTL(layer){
 function downloadSCADWrapper(layer){
   const stlName = `figuring_exact_${layer}.stl`;
   const labelMap = {
-    all:'Full figure', core:'Core', ideal:'Ideal', perceived:'Perceived', data:'Data plus stand'
+    all:'Full figure', core:'Core', ideal:'Ideal', perceived:'Perceived', data:'Data'
   };
   const scad = `// FIGURING exact wrapper
 // Export ${stlName} from the HTML first, then keep this SCAD in the same folder.
@@ -2318,6 +2358,24 @@ function wpDrawFigurine(ctx, cx, cy, radius, varSeed, rotation, isDark){
   const variation = parseInt(document.getElementById('wp-variation').value) / 100;
   document.getElementById('wp-var-val').textContent = Math.round(variation*100);
 
+  // Atmospheric halo + shadow
+  const halo = ctx.createRadialGradient(0, radius*0.05, radius*0.08, 0, radius*0.05, radius*1.45);
+  halo.addColorStop(0, isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.34)');
+  halo.addColorStop(0.55, isDark ? 'rgba(235,97,144,0.10)' : 'rgba(235,97,144,0.12)');
+  halo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath();
+  ctx.arc(0, radius*0.05, radius*1.45, 0, Math.PI*2);
+  ctx.fillStyle = halo;
+  ctx.fill();
+
+  const shadow = ctx.createRadialGradient(0, radius*1.05, radius*0.08, 0, radius*1.05, radius*0.95);
+  shadow.addColorStop(0, 'rgba(0,0,0,0.24)');
+  shadow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.ellipse(0, radius*1.02, radius*0.82, radius*0.26, 0, 0, Math.PI*2);
+  ctx.fillStyle = shadow;
+  ctx.fill();
+
   // Vary params per tile using seed
   function varyParam(base, seed, amt){
     const n = hash(seed * 17.3 + varSeed * 91.7) * 2 - 1;
@@ -2366,6 +2424,19 @@ function wpDrawFigurine(ctx, cx, cy, radius, varSeed, rotation, isDark){
   dataGrad.addColorStop(1,   toneColor(dataTone, isDark ? 0.18 : 0.12));
   ctx.fillStyle = dataGrad;
   ctx.fill();
+
+  // Gloss ribbon on the outer data layer
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.beginPath();
+  ctx.ellipse(-dataR*0.08, -dataR*0.28, dataR*0.52, dataR*0.18, -0.42, 0, Math.PI*2);
+  const ribbon = ctx.createLinearGradient(-dataR, -dataR*0.3, dataR, dataR*0.1);
+  ribbon.addColorStop(0, 'rgba(255,255,255,0)');
+  ribbon.addColorStop(0.5, 'rgba(255,255,255,0.26)');
+  ribbon.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = ribbon;
+  ctx.fill();
+  ctx.restore();
 
   // ── Layer 3: Perceived amoeba ──
   const percR = radius * 0.82;
@@ -2455,17 +2526,60 @@ function wpDrawFigurine(ctx, cx, cy, radius, varSeed, rotation, isDark){
   ctx.restore();
 }
 
+
 function wpDrawBackground(ctx, W, H){
+  // Base atmosphere
   if(WP_BG_GRADS[wpBg]){
     const [c1,c2] = WP_BG_GRADS[wpBg];
     const grad = ctx.createLinearGradient(0,0,0,H);
     grad.addColorStop(0,c1); grad.addColorStop(1,c2);
     ctx.fillStyle=grad;
   } else {
-    ctx.fillStyle = WP_BG_COLORS[wpBg] || '#f0ece4';
+    const bg = WP_BG_COLORS[wpBg] || '#f0ece4';
+    const grad = ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0,bg);
+    grad.addColorStop(1,bg);
+    ctx.fillStyle = grad;
   }
   ctx.fillRect(0,0,W,H);
+
+  // Soft painterly bloom
+  const bloom1 = ctx.createRadialGradient(W*0.22,H*0.18,0,W*0.22,H*0.18,Math.max(W,H)*0.45);
+  bloom1.addColorStop(0,'rgba(255,255,255,0.22)');
+  bloom1.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle = bloom1;
+  ctx.fillRect(0,0,W,H);
+
+  const bloom2 = ctx.createRadialGradient(W*0.78,H*0.72,0,W*0.78,H*0.72,Math.max(W,H)*0.50);
+  bloom2.addColorStop(0,'rgba(235,97,144,0.18)');
+  bloom2.addColorStop(1,'rgba(235,97,144,0)');
+  ctx.fillStyle = bloom2;
+  ctx.fillRect(0,0,W,H);
+
+  // Orbital arcs for a less flat, more exhibition-poster feel
+  ctx.save();
+  ctx.lineWidth = Math.max(1, W*0.0018);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  for(let i=0;i<4;i++){
+    ctx.beginPath();
+    const rx = W*(0.22 + i*0.12);
+    const ry = H*(0.16 + i*0.09);
+    ctx.ellipse(W*0.5, H*0.5, rx, ry, i*0.22, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Fine grain
+  const grainCount = Math.round(W*H/1800);
+  for(let i=0;i<grainCount;i++){
+    const x = hash(i*1.37+W)*W;
+    const y = hash(i*2.91+H)*H;
+    const a = 0.02 + hash(i*5.21)*0.04;
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fillRect(x,y,1,1);
+  }
 }
+
 
 function wpGetTilePositions(W, H, layout){
   const positions = [];
@@ -2514,6 +2628,95 @@ function wpGetTilePositions(W, H, layout){
   return positions;
 }
 
+let wpRenderCache = {};
+
+function wpResetRenderCache(){ wpRenderCache = {}; }
+
+function wpMakePreviewTile(size, angleOffset){
+  const key = `${size}_${angleOffset.toFixed(3)}_${stageIdx}_${P.core.emo}_${P.core.rhy}_${P.core.con}_${P.core.prs}_${P.ideal.cla}_${P.ideal.amb}_${P.ideal.dis}_${P.perceived.rol}_${P.perceived.ste}_${P.perceived.val}_${P.data.rep}_${P.data.vol}_${P.data.sil}_${P.data.dig}_${P.core.tone}_${P.ideal.tone}_${P.perceived.tone}_${P.data.tone}`;
+  if(wpRenderCache[key]) return wpRenderCache[key];
+
+  const tileCanvas = document.createElement('canvas');
+  tileCanvas.width = size;
+  tileCanvas.height = size;
+
+  const tempRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:true});
+  tempRenderer.setPixelRatio(1);
+  tempRenderer.setSize(size, size, false);
+  tempRenderer.setClearColor(0x000000, 0);
+  tempRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  tempRenderer.toneMappingExposure = 1.1;
+  tempRenderer.physicallyCorrectLights = true;
+
+  const tempScene = new THREE.Scene();
+  const tempCamera = new THREE.PerspectiveCamera(38, 1, 0.1, 3000);
+  tempCamera.position.set(0, 20, 500);
+
+  tempScene.add(new THREE.AmbientLight(0xfff8f0, 2.2));
+  const keyL=new THREE.DirectionalLight(0xffffff,3.5); keyL.position.set(80,400,200); tempScene.add(keyL);
+  const fillL=new THREE.DirectionalLight(0xdde8ff,2.0); fillL.position.set(-300,100,100); tempScene.add(fillL);
+  const rimL=new THREE.DirectionalLight(0xffccaa,2.8); rimL.position.set(0,-100,-300); tempScene.add(rimL);
+  const underL=new THREE.DirectionalLight(0xfff0dd,1.2); underL.position.set(0,-400,0); tempScene.add(underL);
+  const pt1=new THREE.PointLight(0xffffff,4.0,600); pt1.position.set(150,250,250); tempScene.add(pt1);
+  const pt2=new THREE.PointLight(0xffeedd,2.5,500); pt2.position.set(-180,80,180); tempScene.add(pt2);
+
+  const cloneGroup = rotGroup.clone(true);
+  cloneGroup.rotation.x = curRotX + 0.08;
+  cloneGroup.rotation.y = curRotY + angleOffset;
+  cloneGroup.rotation.z = angleOffset * 0.08;
+  cloneGroup.position.y = 18;
+  tempScene.add(cloneGroup);
+
+  tempRenderer.render(tempScene, tempCamera);
+  const tctx = tileCanvas.getContext('2d');
+  tctx.clearRect(0,0,size,size);
+  tctx.drawImage(tempRenderer.domElement, 0, 0, size, size);
+
+  tempRenderer.dispose();
+  wpRenderCache[key] = tileCanvas;
+  return tileCanvas;
+}
+
+function wpDrawPreviewTile(ctx, cx, cy, radius, i, isDark){
+  const baseSize = Math.max(320, Math.round(radius * 3.4));
+  const angleOffset = (hash(i*11.7 + radius) - 0.5) * 0.9;
+  const renderCanvas = wpMakePreviewTile(baseSize, angleOffset);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  const rot = wpRot===1 ? (hash(i*13.7) - 0.5) * Math.PI * 0.25 : 0;
+  ctx.rotate(rot);
+
+  const halo = ctx.createRadialGradient(0, radius*0.08, radius*0.05, 0, radius*0.08, radius*1.42);
+  halo.addColorStop(0, isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.24)');
+  halo.addColorStop(0.55, 'rgba(235,97,144,0.10)');
+  halo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(0, radius*0.1, radius*1.42, 0, Math.PI*2); ctx.fill();
+
+  const shadow = ctx.createRadialGradient(0, radius*0.98, radius*0.06, 0, radius*0.98, radius*0.92);
+  shadow.addColorStop(0, 'rgba(0,0,0,0.24)');
+  shadow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = shadow;
+  ctx.beginPath(); ctx.ellipse(0, radius*1.02, radius*0.8, radius*0.22, 0, 0, Math.PI*2); ctx.fill();
+
+  const drawW = radius * 2.55;
+  const drawH = radius * 2.55;
+  ctx.drawImage(renderCanvas, -drawW/2, -drawH/2, drawW, drawH);
+
+  ctx.globalCompositeOperation = 'screen';
+  const gloss = ctx.createLinearGradient(-radius*0.7, -radius*0.8, radius*0.2, radius*0.2);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.00)');
+  gloss.addColorStop(0.45, 'rgba(255,255,255,0.16)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0.00)');
+  ctx.fillStyle = gloss;
+  ctx.beginPath();
+  ctx.ellipse(-radius*0.12, -radius*0.18, radius*0.55, radius*0.22, -0.5, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function wpRender(){
   const [W,H] = WP_SIZES[wpFormat];
   const canvas = document.getElementById('wp-canvas');
@@ -2521,14 +2724,15 @@ function wpRender(){
   const ctx = canvas.getContext('2d');
   const isDark = ['black','midnight','grad-night'].includes(wpBg);
 
+  wpResetRenderCache();
+
   // Background
   wpDrawBackground(ctx, W, H);
 
-  // Tiles
+  // Tiles rendered from the live 3D preview so the wallpaper matches the figurine view
   const tiles = wpGetTilePositions(W, H, wpLayout);
   tiles.forEach((tile, i) => {
-    const rot = wpRot===1 ? (hash(i*13.7) - 0.5) * Math.PI * 0.35 : 0;
-    wpDrawFigurine(ctx, tile.x, tile.y, tile.r, i * 137.5 + 1, rot, isDark);
+    wpDrawPreviewTile(ctx, tile.x, tile.y, tile.r, i * 137.5 + 1, isDark);
   });
 
   // Optional label

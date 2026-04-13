@@ -136,6 +136,34 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
   #wallpaper-modal > div:first-child{width:100%!important;min-width:0!important;max-height:50dvh}
 }
 
+
+/* ── LAYER VISIBILITY STRIP ── */
+#layer-toggles{
+  position:absolute;
+  top:12px;left:12px;
+  display:flex;gap:5px;
+  z-index:6;
+}
+.lyr-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;
+  font-family:'Space Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;border:1.5px solid transparent;
+  transition:all .18s;user-select:none;
+  opacity:0.45;
+}
+.lyr-btn.on{opacity:1;}
+.lyr-btn .lyr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.lyr-btn[data-layer="core"]   {color:var(--yellow);border-color:#333;}
+.lyr-btn[data-layer="ideal"]  {color:#7FFFD4;border-color:#333;}
+.lyr-btn[data-layer="perceived"]{color:#E8272A;border-color:#333;}
+.lyr-btn[data-layer="data"]   {color:#1B3FD8;border-color:#333;}
+.lyr-btn[data-layer="core"].on   {border-color:var(--yellow);background:rgba(245,208,0,.08);}
+.lyr-btn[data-layer="ideal"].on  {border-color:#7FFFD4;background:rgba(127,255,212,.07);}
+.lyr-btn[data-layer="perceived"].on{border-color:#E8272A;background:rgba(232,39,42,.07);}
+.lyr-btn[data-layer="data"].on   {border-color:#1B3FD8;background:rgba(27,63,216,.09);}
+.lyr-btn:hover{opacity:1;}
 </style>
 </head>
 <body>
@@ -253,11 +281,28 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.5)}
 <div id="canvas-wrap">
   <div id="layer-badge">LAYER: CORE</div>
   <canvas id="section-canvas" style="display:none;position:absolute;top:0;left:0;background:#0e0e12"></canvas>
+
+  <!-- LAYER VISIBILITY TOGGLES -->
+  <div id="layer-toggles">
+    <button class="lyr-btn on" data-layer="core"      onclick="toggleLayer('core')"     >
+      <span class="lyr-dot" style="background:var(--yellow)"></span>CORE
+    </button>
+    <button class="lyr-btn"   data-layer="ideal"     onclick="toggleLayer('ideal')"    >
+      <span class="lyr-dot" style="background:#7FFFD4"></span>IDEAL
+    </button>
+    <button class="lyr-btn"   data-layer="perceived" onclick="toggleLayer('perceived')" >
+      <span class="lyr-dot" style="background:#E8272A"></span>PERCEIVED
+    </button>
+    <button class="lyr-btn"   data-layer="data"      onclick="toggleLayer('data')"     >
+      <span class="lyr-dot" style="background:#1B3FD8"></span>DATA
+    </button>
+  </div>
+
   <div id="hint-bar">
     <div class="hint-item"><span class="hint-key">DRAG</span>Rotate</div>
     <div class="hint-item"><span class="hint-key">SCROLL</span>Zoom</div>
-    <div class="hint-item"><span class="hint-key">DBL-CLICK</span>Toggle layer</div>
-    <div class="hint-item"><span class="hint-key">1-4</span>Layers</div>
+    
+    <div class="hint-item"><span class="hint-key">1–4</span>Toggle layers</div>
     <div class="hint-item"><span class="hint-key">R</span>Reset</div>
     <div class="hint-item" style="margin-left:auto"><button onclick="openChainPreview()" style="background:var(--yellow);color:#000;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase">⛓ CHAIN PREVIEW</button><button onclick="openWallpaper()" style="background:#eb6190;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.1em;padding:6px 12px;cursor:pointer;text-transform:uppercase;margin-left:6px">✦ WALLPAPER</button>
     </div>
@@ -473,9 +518,11 @@ function nextStage(){ if(stageIdx<3){stageIdx++;activateStage();} }
 function prevStage(){ if(stageIdx>0){stageIdx--;activateStage();} }
 
 function activateStage(){
-  layerVis.core=true; layerVis.ideal=stageIdx>=1; layerVis.perceived=stageIdx>=2; layerVis.data=stageIdx>=3;
-  syncVis();
+  // When navigating to a stage for the first time, reveal that layer if it's not already on.
+  // We do NOT force layers off — the user controls visibility via the toggle strip.
   const s=stages[stageIdx];
+  if(!layerVis[s]) { layerVis[s]=true; syncVis(); }
+
   document.querySelectorAll('.stage-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById(`panel-${s}`).classList.add('active');
   document.querySelectorAll('.stage-tab').forEach(t=>t.classList.remove('active'));
@@ -483,8 +530,8 @@ function activateStage(){
   document.getElementById('btn-prev').style.display=stageIdx===0?'none':'flex';
   document.getElementById('btn-next').style.display=stageIdx===3?'none':'flex';
   document.getElementById('btn-finish').style.display=stageIdx===3?'flex':'none';
-  const labels=['LAYER: CORE','CORE · IDEAL','CORE · IDEAL · PERCEIVED','ALL LAYERS'];
-  document.getElementById('layer-badge').textContent=labels[stageIdx];
+  updateLayerBadge();
+  syncToggleButtons();
   if(viewMode==='section') drawSection();
 }
 
@@ -1151,6 +1198,25 @@ function syncVis(){
   if(meshGroups.ideal)     meshGroups.ideal.visible     =layerVis.ideal;
   if(meshGroups.perceived) meshGroups.perceived.visible =layerVis.perceived;
   if(meshGroups.data)      meshGroups.data.visible      =layerVis.data;
+  updateLayerBadge();
+  syncToggleButtons();
+}
+
+function updateLayerBadge(){
+  const on=Object.entries(layerVis).filter(([,v])=>v).map(([k])=>k.toUpperCase());
+  document.getElementById('layer-badge').textContent = on.length ? on.join(' · ') : 'NONE VISIBLE';
+}
+
+function syncToggleButtons(){
+  document.querySelectorAll('.lyr-btn').forEach(btn=>{
+    const layer = btn.dataset.layer;
+    btn.classList.toggle('on', !!layerVis[layer]);
+  });
+}
+
+function toggleLayer(layer){
+  layerVis[layer] = !layerVis[layer];
+  syncVis();
 }
 
 // ══════════════════════════════════════════════════
@@ -1479,13 +1545,7 @@ function bindEvents(){
     targetZ=Math.max(100,Math.min(1000,targetZ+e.deltaY*0.5));
   },{passive:false});
 
-  let lastClick=0;
-  wrap.addEventListener('click',()=>{
-    if(viewMode!=='3d')return;
-    const now=Date.now();
-    if(now-lastClick<280){ const s=stages[stageIdx]; layerVis[s]=!layerVis[s]; syncVis(); }
-    lastClick=now;
-  });
+  // (double-click toggle removed — use the layer buttons at top-left instead)
 
   // Touch
   let ltd=0;
@@ -1507,10 +1567,10 @@ function bindEvents(){
 
   window.addEventListener('keydown',e=>{
     if(e.key==='r'||e.key==='R'){ targetRotY=0.5; targetRotX=-0.15; targetZ=500; autoSpin=true; }
-    if(e.key==='1'){layerVis.core=!layerVis.core;syncVis();}
-    if(e.key==='2'){layerVis.ideal=!layerVis.ideal;syncVis();}
-    if(e.key==='3'){layerVis.perceived=!layerVis.perceived;syncVis();}
-    if(e.key==='4'){layerVis.data=!layerVis.data;syncVis();}
+    if(e.key==='1'){toggleLayer('core');}
+    if(e.key==='2'){toggleLayer('ideal');}
+    if(e.key==='3'){toggleLayer('perceived');}
+    if(e.key==='4'){toggleLayer('data');}
     if(e.key==='s'||e.key==='S') setView(viewMode==='3d'?'section':'3d');
   });
 
